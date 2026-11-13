@@ -52,7 +52,7 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-primary">KM Prüfung</p>
-          <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Prüfungsvorbereitung</h1>
+          <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Konfiguration</h1>
         </div>
         <button className="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={onLock} type="button">
           App sperren

@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import type { ExamSession, ExamTask } from '../lib/types';
 
 interface ExamProps {
@@ -12,10 +13,11 @@ function percentage(value: number, total: number): number {
 
 interface TaskCardProps {
   task: ExamTask;
+  number: number;
   onChange: ExamProps['onTaskChange'];
 }
 
-function TaskCard({ task, onChange }: TaskCardProps) {
+function TaskCard({ task, number, onChange }: TaskCardProps) {
   const statusClass = 'rounded-md border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
@@ -23,6 +25,7 @@ function TaskCard({ task, onChange }: TaskCardProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium tabular-nums text-primary/80">{number}.</span>
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               {task.kind === 'technique' ? `Technik · Stufe ${task.level}` : 'Allgemeine Aufgabe'}
             </span>
@@ -31,7 +34,7 @@ function TaskCard({ task, onChange }: TaskCardProps) {
           <h3 className="text-lg font-semibold text-white">{task.text}</h3>
           {task.details && (
             <details className="mt-2 text-sm text-slate-300">
-              <summary className="w-fit cursor-pointer select-none text-primary underline decoration-dotted underline-offset-4">Details anzeigen</summary>
+              <summary className="w-fit cursor-pointer select-none underline decoration-dotted underline-offset-4">Details anzeigen</summary>
               <p className="mt-2 rounded-md border-l-2 border-primary bg-slate-800/70 px-3 py-2">{task.details}</p>
             </details>
           )}
@@ -131,7 +134,14 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
 
         {session.tasks.length > 0 ? (
           <div className="space-y-3 print:space-y-4">
-            {session.tasks.map((task, index) => <TaskCard key={`${task.id}-${index}`} onChange={onTaskChange} task={task} />)}
+            {session.tasks.map((task, index) => (
+              <Fragment key={`${task.id}-${index}`}>
+                {index > 0 && session.tasks[index - 1].kind !== task.kind && (
+                  <hr aria-hidden="true" className="my-6! border-slate-700/70 print:border-slate-300" />
+                )}
+                <TaskCard number={index + 1} onChange={onTaskChange} task={task} />
+              </Fragment>
+            ))}
           </div>
         ) : (
           <p className="rounded-xl border border-slate-700 bg-panel p-5 text-slate-300">Für diese Prüfung wurden keine Aufgaben ausgewählt.</p>
