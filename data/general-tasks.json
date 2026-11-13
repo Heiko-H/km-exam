@@ -1,0 +1,7 @@
+[
+  { "id": "sparring-2", "text": "Sparring (2 Gegner)" },
+  { "id": "sparring-3", "text": "Sparring (3 Gegner)" },
+  { "id": "shadowboxing", "text": "Schattenboxen" },
+  { "id": "grappling", "text": "Grappling" },
+  { "id": "opponent-circle", "text": "Gegner-Zirkel" }
+]

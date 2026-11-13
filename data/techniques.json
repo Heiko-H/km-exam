@@ -1,0 +1,14 @@
+[
+  { "level": 1, "text": "Abwehr von Haken", "details": "Auf Distanz und mit stabiler Deckung arbeiten." },
+  { "level": 1, "text": "Taktisches gehen", "details": "Bewege dich kontrolliert und behalte den Gegner im Blick." },
+  { "level": 1, "text": "Fallschule nach vorne", "details": "Schütze Kopf und Gelenke bei der Vorwärtsrolle." },
+  { "level": 2, "text": "Verteidigung gegen Frontkick", "details": "Distanz schließen und den Gegenangriff kontrolliert ausführen." },
+  { "level": 2, "text": "Verteidigung gegen Mittelstufekick", "details": "Achte auf Deckung und sichere Distanz nach der Abwehr." },
+  { "level": 3, "text": "Abwehr gegen Angriff mit Baseballschläger", "details": "Sicherheit und Fluchtmöglichkeit haben Vorrang." },
+  { "level": 3, "text": "Boden Mount, würgen am Hals", "details": "Schütze den Hals und arbeite an einer kontrollierten Befreiung." },
+  { "level": 4, "text": "Messbedrohnung (außen) am Hals", "details": "Vermeide unnötige Bewegungen und löse dich kontrolliert." },
+  { "level": 4, "text": "Messerangriff Kommando", "details": "Setze eine klare Bewegung mit anschließender Flucht um." },
+  { "level": 4, "text": "Messerangriff Eispickel", "details": "Schütze Kopf und Körper und verlasse die Gefahrenzone." },
+  { "level": 5, "text": "Bedrohung Pistole Kopf frontal", "details": "Priorität hat eine sichere Lagebeurteilung und Deeskalation." },
+  { "level": 5, "text": "Bedrohung Pistole Bauch frontal", "details": "Handle kontrolliert und nutze eine sichere Fluchtmöglichkeit." }
+]
