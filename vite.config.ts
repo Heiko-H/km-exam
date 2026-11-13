@@ -16,13 +16,13 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       encryptedDataPlugin(password, resolve(process.cwd(), 'data')),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['pwa-icon.svg'],
         pwaAssets: { config: true, overrideManifestIcons: true },
         manifest: {
-          name: 'Krav-Maga Prüfungs-App',
-          short_name: 'KM Prüfung',
-          description: 'Prüfungs-App für Krav-Maga',
+          name: 'IKMI Prüfungs-App',
+          short_name: 'IKMI Prüfung',
+          description: 'Prüfungs-App für Krav-Maga IKMI',
           lang: 'de',
           theme_color: '#192a3d',
           background_color: '#192a3d',

@@ -33,3 +33,5 @@ Das Repository muss `km-exam` heißen (Base-Pfad `/km-exam/`). In den Repository
 ## App installieren
 
 Die veröffentlichte Website ist eine Progressive Web App (PWA). Öffne sie über HTTPS und installiere sie über die Browserfunktion **App installieren** (Chrome/Android und unterstützte Desktop-Browser). Auf iPhone und iPad öffnest du die Seite in Safari, tippst auf **Teilen** und wählst **Zum Home-Bildschirm**. Die App kann anschließend wie eine installierte Anwendung im eigenen Fenster gestartet werden.
+
+Die App prüft beim Öffnen, danach stündlich und bei Rückkehr in den Vordergrund auf neue Versionen. Bei einem Update erscheint ein Hinweis; die App wird nicht automatisch neu geladen. Wähle **App neu starten**, wenn du das Update sofort übernehmen möchtest, oder starte die App später selbst erneut.
