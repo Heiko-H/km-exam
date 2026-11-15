@@ -1,7 +1,7 @@
 [
-  { "id": "sparring-2", "text": "Sparring (2 Gegner)" },
-  { "id": "sparring-3", "text": "Sparring (3 Gegner)" },
-  { "id": "shadowboxing", "text": "Schattenboxen" },
-  { "id": "grappling", "text": "Grappling" },
-  { "id": "opponent-circle", "text": "Gegner-Zirkel" }
+  { "id": "sparring-2", "text": "Sparring (2 Gegner)", "details": "Prüfung gegen zwei Gegner gleichzeitig." },
+  { "id": "sparring-3", "text": "Sparring (3 Gegner)", "details": "Prüfung gegen drei Gegner gleichzeitig." },
+  { "id": "shadowboxing", "text": "Schattenboxen", "details": "Techniken und Kombinationen ohne Partner ausführen." },
+  { "id": "grappling", "text": "Grappling", "details": "Bodenkampf mit einem Trainingspartner." },
+  { "id": "opponent-circle", "text": "Gegner-Zirkel", "details": "Mehrere Gegner nacheinander abwehren." }
 ]

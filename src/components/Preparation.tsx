@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { LEVELS, type ExamData, type GeneralTaskPlacement, type Level, type PreparationSettings } from '../lib/types';
+import { Stepper } from './Stepper';
+import { InfoButton } from './InfoButton';
 
 interface PreparationProps {
   data: ExamData;
@@ -9,10 +11,10 @@ interface PreparationProps {
   onLock: () => void;
 }
 
-const placementOptions: { value: GeneralTaskPlacement; label: string }[] = [
-  { value: 'hidden', label: 'Nicht anzeigen' },
-  { value: 'before', label: 'Vor Techniken anzeigen' },
-  { value: 'after', label: 'Nach Techniken anzeigen' },
+const placementOptions: { value: GeneralTaskPlacement; label: string; shortLabel: string }[] = [
+  { value: 'hidden', label: 'Nicht verwenden', shortLabel: 'Nicht verwenden' },
+  { value: 'before', label: 'Vor Techniken anzeigen', shortLabel: 'Vor Techniken' },
+  { value: 'after', label: 'Nach Techniken anzeigen', shortLabel: 'Nach Techniken' },
 ];
 
 export function Preparation({ data, settings, onChange, onStart, onLock }: PreparationProps) {
@@ -75,24 +77,35 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
               Nachname
               <input className={inputClass} onChange={(event) => update('lastName', event.target.value)} required value={settings.lastName} />
             </label>
-            <label className="text-sm font-medium text-slate-200">
+            <div className="text-sm font-medium text-slate-200">
               Prüfungsstufe
-              <select className={inputClass} onChange={(event) => update('level', Number(event.target.value) as Level)} value={settings.level}>
-                {LEVELS.map((level) => <option key={level} value={level}>Stufe {level}</option>)}
-              </select>
-            </label>
-            <label className="text-sm font-medium text-slate-200">
+              <div aria-label="Prüfungsstufe" className="mt-1 grid grid-cols-5 gap-2" role="group">
+                {LEVELS.map((level) => (
+                  <button
+                    aria-label={`Stufe ${level}`}
+                    aria-pressed={settings.level === level}
+                    className={`min-h-11 whitespace-nowrap rounded-md border px-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary sm:px-2 sm:text-sm ${settings.level === level ? 'border-primary bg-primary text-white' : 'border-slate-600 bg-field text-slate-200 hover:bg-slate-800'}`}
+                    key={level}
+                    onClick={() => update('level', level as Level)}
+                    type="button"
+                  >
+                    Stufe {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="text-sm font-medium text-slate-200 m-auto text-center">
               Gesamtanzahl Prüflinge
-              <input
-                className={inputClass}
-                min={1}
-                onChange={(event) => update('candidateCount', Number(event.target.value))}
-                required
-                step={1}
-                type="number"
-                value={settings.candidateCount}
-              />
-            </label>
+              <div className="mt-1">
+                <Stepper
+                  label="Gesamtanzahl Prüflinge"
+                  max={Number.MAX_SAFE_INTEGER}
+                  min={1}
+                  onChange={(candidateCount) => update('candidateCount', candidateCount)}
+                  value={settings.candidateCount}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -103,19 +116,16 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
             {LEVELS.map((level) => {
               const max = data.techniques.filter((technique) => technique.level === level).length;
               return (
-                <label className="flex items-center justify-between gap-4 rounded-lg border border-slate-700 px-3 py-3" key={level}>
+                <div className="flex flex-col gap-3 rounded-lg border border-slate-700 px-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={level}>
                   <span className="font-medium text-slate-100">Stufe {level}<span className="ml-2 text-sm font-normal text-slate-400">({max} verfügbar)</span></span>
-                  <input
-                    aria-label={`Anzahl Techniken aus Stufe ${level}`}
-                    className="w-24 rounded-md border border-slate-600 bg-field px-3 py-2 text-right text-white outline-none focus:border-primary"
+                  <Stepper
+                    label={`Anzahl Techniken aus Stufe ${level}`}
                     max={max}
                     min={0}
-                    onChange={(event) => update('techniqueCounts', { ...settings.techniqueCounts, [level]: Number(event.target.value) })}
-                    step={1}
-                    type="number"
+                    onChange={(count) => update('techniqueCounts', { ...settings.techniqueCounts, [level]: count })}
                     value={settings.techniqueCounts[level]}
                   />
-                </label>
+                </div>
               );
             })}
           </div>
@@ -126,20 +136,50 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
           <p className="mb-4 text-sm text-slate-400">Diese Aufgaben werden zusätzlich zu den Techniken angezeigt.</p>
           <div className="space-y-3">
             {data.generalTasks.map((task) => (
-              <label className="flex flex-col gap-2 rounded-lg border border-slate-700 px-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={task.id}>
-                <span className="font-medium text-slate-100">{task.text}</span>
-                <select
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 px-3 py-2" key={task.id}>
+                <div className="flex min-w-0 items-center gap-1 font-medium text-slate-100">
+                  <span>{task.text}</span>
+                  {task.details && <InfoButton details={task.details} title={task.text} />}
+                </div>
+                <div
                   aria-label={`Anzeige von ${task.text}`}
-                  className="rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary"
-                  onChange={(event) => update('generalTaskPlacements', {
-                    ...settings.generalTaskPlacements,
-                    [task.id]: event.target.value as GeneralTaskPlacement,
-                  })}
-                  value={settings.generalTaskPlacements[task.id] ?? 'hidden'}
+                  className="flex flex-wrap gap-1"
+                  role="radiogroup"
                 >
-                  {placementOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>
+                  {placementOptions.map((option, index) => {
+                    const selectedPlacement = settings.generalTaskPlacements[task.id] ?? 'hidden';
+                    const selectedIndex = placementOptions.findIndex((item) => item.value === selectedPlacement);
+                    return (
+                      <button
+                        aria-checked={selectedPlacement === option.value}
+                        aria-label={option.label}
+                        className={`min-h-9 rounded-md border px-2 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary ${selectedPlacement === option.value ? 'border-primary bg-primary/20 text-orange-100' : 'border-slate-600 bg-field text-slate-300 hover:bg-slate-800'}`}
+                        key={option.value}
+                        onClick={() => update('generalTaskPlacements', { ...settings.generalTaskPlacements, [task.id]: option.value })}
+                        onKeyDown={(event) => {
+                          let nextIndex: number | undefined;
+                          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % placementOptions.length;
+                          if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index + placementOptions.length - 1) % placementOptions.length;
+                          if (event.key === 'Home') nextIndex = 0;
+                          if (event.key === 'End') nextIndex = placementOptions.length - 1;
+                          if (nextIndex !== undefined) {
+                            event.preventDefault();
+                            const nextPlacement = placementOptions[nextIndex].value;
+                            update('generalTaskPlacements', { ...settings.generalTaskPlacements, [task.id]: nextPlacement });
+                            document.getElementById(`placement-${task.id}-${nextPlacement}`)?.focus();
+                          }
+                        }}
+                        id={`placement-${task.id}-${option.value}`}
+                        role="radio"
+                        tabIndex={selectedIndex === index ? 0 : -1}
+                        type="button"
+                      >
+                        {option.shortLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
         </section>

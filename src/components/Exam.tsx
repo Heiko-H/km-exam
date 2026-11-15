@@ -1,5 +1,7 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import type { ExamSession, ExamTask } from '../lib/types';
+import { Modal } from './Modal';
+import { InfoButton } from './InfoButton';
 
 interface ExamProps {
   session: ExamSession;
@@ -18,31 +20,30 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, number, onChange }: TaskCardProps) {
+  const hasNote = task.note.length > 0;
+  const [noteOpen, setNoteOpen] = useState(hasNote);
   const statusClass = 'rounded-md border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
-    <article className="exam-task rounded-xl border border-slate-700 bg-panel p-4 sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <article className="exam-task rounded-xl border border-slate-700 bg-panel p-3 sm:p-5 print:p-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between print:flex-row print:items-center print:gap-2">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium tabular-nums text-primary/80">{number}.</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <div className="mb-1 flex flex-wrap items-center gap-2 print:mb-0">
+            <span className="text-sm font-medium tabular-nums text-primary/80 print:text-xs">{number}.</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 print:text-[10px]">
               {task.kind === 'technique' ? `Technik · Stufe ${task.level}` : 'Allgemeine Aufgabe'}
             </span>
-            {task.repeated && <span className="rounded-full bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-200">Wiederholung</span>}
+            {task.repeated && <span className="rounded-full bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-200 print:hidden">Wiederholung</span>}
           </div>
-          <h3 className="text-lg font-semibold text-white">{task.text}</h3>
-          {task.details && (
-            <details className="mt-2 text-sm text-slate-300">
-              <summary className="w-fit cursor-pointer select-none underline decoration-dotted underline-offset-4">Details anzeigen</summary>
-              <p className="mt-2 rounded-md border-l-2 border-primary bg-slate-800/70 px-3 py-2">{task.details}</p>
-            </details>
-          )}
+          <h3 className="flex flex-wrap items-center gap-2 text-lg font-semibold text-white print:text-sm">
+            <span>{task.text}</span>
+            {task.details && <InfoButton details={task.details} title={task.text} />}
+          </h3>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end print:ml-auto print:block print:shrink-0">
           <button
             aria-pressed={task.passed}
-            className={`${statusClass} ${task.passed ? 'border-emerald-500 bg-emerald-900 text-emerald-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
+            className={`${statusClass} print:hidden ${task.passed ? 'border-emerald-500 bg-emerald-900 text-emerald-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
             onClick={() => onChange(task.id, { passed: true, failed: false })}
             type="button"
           >
@@ -50,7 +51,7 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
           </button>
           <button
             aria-pressed={task.repeated}
-            className={`${statusClass} ${task.repeated ? 'border-amber-500 bg-amber-900 text-amber-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
+            className={`${statusClass} print:hidden ${task.repeated ? 'border-amber-500 bg-amber-900 text-amber-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
             onClick={() => onChange(task.id, { repeated: !task.repeated })}
             type="button"
           >
@@ -58,24 +59,52 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
           </button>
           <button
             aria-pressed={task.failed}
-            className={`${statusClass} ${task.failed ? 'border-red-500 bg-red-900 text-red-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
+            className={`${statusClass} print:hidden ${task.failed ? 'border-red-500 bg-red-900 text-red-100' : 'border-slate-600 text-slate-200 hover:bg-slate-800'}`}
             onClick={() => onChange(task.id, { failed: true, passed: false })}
             type="button"
           >
             Nicht bestanden
           </button>
+          <span className="hidden whitespace-nowrap text-sm font-semibold print:inline">
+            {task.passed && (
+              <>
+                <span className="print-status-passed">Bestanden</span>
+                {task.repeated && ' (wiederholt)'}
+              </>
+            )}
+            {task.failed && (
+              <>
+                <span className="print-status-failed">Nicht bestanden</span>
+                {task.repeated && ' (wiederholt)'}
+              </>
+            )}
+          </span>
         </div>
       </div>
-      <details className="mt-4 border-t border-slate-700 pt-3">
-        <summary className="w-fit cursor-pointer text-sm font-medium text-slate-300">Merktext zur Aufgabe</summary>
+      <details
+        className={`mt-3 border-t border-slate-700 pt-3 print:mt-1 print:border-0 print:pt-0 ${hasNote ? '' : 'print:hidden'}`}
+        onToggle={(event) => setNoteOpen(event.currentTarget.open)}
+        open={noteOpen || hasNote}
+      >
+        <summary
+          aria-disabled={hasNote || undefined}
+          className={`w-fit text-sm font-medium text-slate-300 ${hasNote ? 'cursor-default' : 'cursor-pointer'}`}
+          onClick={(event) => {
+            if (hasNote) event.preventDefault();
+          }}
+          title={hasNote ? 'Zum Einklappen zuerst die Notiz entfernen' : undefined}
+        >
+          Merktext zur Aufgabe
+        </summary>
         <label className="mt-3 block text-sm text-slate-300">
           Notiz
           <textarea
-            className="mt-1 min-h-20 w-full resize-y rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary"
+            className="mt-1 min-h-20 w-full resize-y rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary print:hidden"
             onChange={(event) => onChange(task.id, { note: event.target.value })}
             placeholder="Notiz während der Prüfung …"
             value={task.note}
           />
+          <span className="hidden whitespace-pre-wrap print:block">{task.note}</span>
         </label>
       </details>
     </article>
@@ -83,6 +112,7 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
 }
 
 export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
+  const [confirmNewExam, setConfirmNewExam] = useState(false);
   const total = session.tasks.length;
   const passed = session.tasks.filter((task) => task.passed).length;
   const repeated = session.tasks.filter((task) => task.repeated).length;
@@ -133,7 +163,7 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
         </div>
 
         {session.tasks.length > 0 ? (
-          <div className="space-y-3 print:space-y-4">
+          <div className="space-y-3 print:space-y-2">
             {session.tasks.map((task, index) => (
               <Fragment key={`${task.id}-${index}`}>
                 {index > 0 && session.tasks[index - 1].kind !== task.kind && (
@@ -148,11 +178,40 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
         )}
 
         <div className="mt-8 border-t border-slate-700 pt-6 text-center print:hidden">
-          <button className="rounded-md bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary" onClick={onNewExam} type="button">
+          <button className="rounded-md bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary" onClick={() => setConfirmNewExam(true)} type="button">
             Neue Prüfung beginnen
           </button>
         </div>
       </main>
+      {confirmNewExam && (
+        <Modal
+          actions={(
+            <>
+              <button
+                className="rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"
+                onClick={() => setConfirmNewExam(false)}
+                type="button"
+              >
+                Abbrechen
+              </button>
+              <button
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary"
+                onClick={() => {
+                  setConfirmNewExam(false);
+                  onNewExam();
+                }}
+                type="button"
+              >
+                Neue Prüfung beginnen
+              </button>
+            </>
+          )}
+          onClose={() => setConfirmNewExam(false)}
+          title="Neue Prüfung beginnen?"
+        >
+          <p>Möchtest du die aktuelle Prüfung wirklich beenden und eine neue Prüfung beginnen?</p>
+        </Modal>
+      )}
     </div>
   );
 }

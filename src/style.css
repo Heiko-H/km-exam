@@ -71,6 +71,14 @@ summary {
     color: black !important;
   }
 
+  .exam-task .print-status-passed {
+    color: #15803d !important;
+  }
+
+  .exam-task .print-status-failed {
+    color: #b91c1c !important;
+  }
+
   details > summary {
     display: none !important;
   }
