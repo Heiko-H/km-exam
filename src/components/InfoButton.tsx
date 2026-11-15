@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface InfoButtonProps {
   title: string;
@@ -7,12 +8,13 @@ interface InfoButtonProps {
 }
 
 export function InfoButton({ title, details }: InfoButtonProps) {
+  const { t } = useI18n();
   const [showDetails, setShowDetails] = useState(false);
 
   return (
     <>
       <button
-        aria-label={`Details zu ${title} anzeigen`}
+        aria-label={t('info.showDetails', { title })}
         className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-primary hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary print:hidden"
         onClick={() => setShowDetails(true)}
         type="button"

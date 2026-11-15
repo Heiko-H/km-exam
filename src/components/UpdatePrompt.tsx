@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function UpdatePrompt() {
+  const { t } = useI18n();
   const [registered, setRegistered] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const updateRef = useRef<{ url: string; registration: ServiceWorkerRegistration } | null>(null);
@@ -51,14 +53,14 @@ export function UpdatePrompt() {
   return (
     <aside aria-live="polite" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-xl rounded-lg border border-primary/50 bg-panel p-4 shadow-xl print:hidden sm:inset-x-6 sm:bottom-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-100">Eine neue Version ist verfügbar. Starte die App neu, um sie zu verwenden.</p>
+        <p className="text-sm text-slate-100">{t('update.message')}</p>
         <div className="flex shrink-0 gap-2">
           <button
             className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary"
             onClick={() => void updateServiceWorker(true)}
             type="button"
           >
-            App neu starten
+            {t('update.restart')}
           </button>
           <button
             className="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -68,7 +70,7 @@ export function UpdatePrompt() {
             }}
             type="button"
           >
-            Später
+            {t('update.later')}
           </button>
         </div>
       </div>

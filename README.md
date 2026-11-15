@@ -14,6 +14,8 @@ Ohne `APP_PASSWORD` startet Vite absichtlich nicht. Tests laufen mit `pnpm test`
 
 - Techniken in `data/techniques.json` ergänzen. Jede Technik hat `level` (1–5), `text` und optional `details`. Texte müssen eindeutig sein; eine Technik darf nur einer Stufe zugeordnet werden.
 - Allgemeine Aufgaben in `data/general-tasks.json` pflegen. Jede Aufgabe hat eine eindeutige `id`, einen `text` und optional `details`.
+- Für jede Technik und allgemeine Aufgabe können Übersetzungen in `translations.en`, `translations.fr`, `translations.it` und `translations.es` ergänzt werden. Jede Übersetzung enthält `text` und – sofern der deutsche Eintrag `details` hat – auch übersetzte `details`. Deutsch bleibt die Ausgangssprache; fehlende Übersetzungen fallen auf Englisch und anschließend auf Deutsch zurück. Der Build weist auf fehlende Übersetzungen hin.
+- Die Oberfläche ist auf Deutsch, Englisch, Französisch, Italienisch und Spanisch verfügbar. Die gewählte Sprache wird im Browser gespeichert und beim nächsten Öffnen wiederhergestellt.
 - Beim Vite-Start/Build werden beide JSON-Dateien mit PBKDF2-SHA-256 (310.000 Iterationen) und AES-256-GCM verschlüsselt und als statisches Modul in das App-Bundle eingebettet. Es gibt zur Laufzeit keinen Datenabruf.
 
 ## Passwort und Sicherheitsgrenzen

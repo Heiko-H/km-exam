@@ -2,6 +2,8 @@ import { Fragment, useState } from 'react';
 import type { ExamSession, ExamTask } from '../lib/types';
 import { Modal } from './Modal';
 import { InfoButton } from './InfoButton';
+import { useI18n } from '../i18n/I18nProvider';
+import { localize } from '../i18n/localize';
 
 interface ExamProps {
   session: ExamSession;
@@ -20,6 +22,8 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, number, onChange }: TaskCardProps) {
+  const { language, t } = useI18n();
+  const localizedTask = localize(task, language);
   const hasNote = task.note.length > 0;
   const [noteOpen, setNoteOpen] = useState(hasNote);
   const statusClass = 'rounded-md border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary';
@@ -31,13 +35,13 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
           <div className="mb-1 flex flex-wrap items-center gap-2 print:mb-0">
             <span className="text-sm font-medium tabular-nums text-primary/80 print:text-xs">{number}.</span>
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 print:text-[10px]">
-              {task.kind === 'technique' ? `Technik · Stufe ${task.level}` : 'Allgemeine Aufgabe'}
+              {task.kind === 'technique' ? t('exam.techniqueLevel', { level: task.level ?? '' }) : t('exam.generalTask')}
             </span>
-            {task.repeated && <span className="rounded-full bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-200 print:hidden">Wiederholung</span>}
+            {task.repeated && <span className="rounded-full bg-amber-950 px-2 py-0.5 text-xs font-medium text-amber-200 print:hidden">{t('exam.repeated')}</span>}
           </div>
           <h3 className="flex flex-wrap items-center gap-2 text-lg font-semibold text-white print:text-sm">
-            <span>{task.text}</span>
-            {task.details && <InfoButton details={task.details} title={task.text} />}
+            <span>{localizedTask.text}</span>
+            {localizedTask.details && <InfoButton details={localizedTask.details} title={localizedTask.text} />}
           </h3>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end print:ml-auto print:block print:shrink-0">
@@ -47,7 +51,7 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
             onClick={() => onChange(task.id, { passed: true, failed: false })}
             type="button"
           >
-            Bestanden
+            {t('exam.passed')}
           </button>
           <button
             aria-pressed={task.repeated}
@@ -55,7 +59,7 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
             onClick={() => onChange(task.id, { repeated: !task.repeated })}
             type="button"
           >
-            Wiederholung
+            {t('exam.repeated')}
           </button>
           <button
             aria-pressed={task.failed}
@@ -63,19 +67,19 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
             onClick={() => onChange(task.id, { failed: true, passed: false })}
             type="button"
           >
-            Nicht bestanden
+            {t('exam.failed')}
           </button>
           <span className="hidden whitespace-nowrap text-sm font-semibold print:inline">
             {task.passed && (
               <>
-                <span className="print-status-passed">Bestanden</span>
-                {task.repeated && ' (wiederholt)'}
+                <span className="print-status-passed">{t('exam.passed')}</span>
+                {task.repeated && t('exam.repeatedSuffix')}
               </>
             )}
             {task.failed && (
               <>
-                <span className="print-status-failed">Nicht bestanden</span>
-                {task.repeated && ' (wiederholt)'}
+                <span className="print-status-failed">{t('exam.failed')}</span>
+                {task.repeated && t('exam.repeatedSuffix')}
               </>
             )}
           </span>
@@ -92,16 +96,16 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
           onClick={(event) => {
             if (hasNote) event.preventDefault();
           }}
-          title={hasNote ? 'Zum Einklappen zuerst die Notiz entfernen' : undefined}
+          title={hasNote ? t('exam.noteLockedHint') : undefined}
         >
-          Merktext zur Aufgabe
+          {t('exam.noteHeading')}
         </summary>
         <label className="mt-3 block text-sm text-slate-300">
-          Notiz
+          {t('exam.noteLabel')}
           <textarea
             className="mt-1 min-h-20 w-full resize-y rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary print:hidden"
             onChange={(event) => onChange(task.id, { note: event.target.value })}
-            placeholder="Notiz während der Prüfung …"
+            placeholder={t('exam.notePlaceholder')}
             value={task.note}
           />
           <span className="hidden whitespace-pre-wrap print:block">{task.note}</span>
@@ -112,6 +116,7 @@ function TaskCard({ task, number, onChange }: TaskCardProps) {
 }
 
 export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
+  const { t } = useI18n();
   const [confirmNewExam, setConfirmNewExam] = useState(false);
   const total = session.tasks.length;
   const passed = session.tasks.filter((task) => task.passed).length;
@@ -125,20 +130,20 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="truncate text-base font-bold text-white print:text-black">{session.firstName} {session.lastName}</p>
-              <p className="text-sm text-slate-300 print:text-black">Stufe {session.level} <span className="mx-1 text-slate-600">·</span> Gesamt: {session.candidateCount} Prüflinge</p>
+              <p className="text-sm text-slate-300 print:text-black">{t('preparation.levelOption', { level: session.level })} <span className="mx-1 text-slate-600">·</span> {t('exam.total', { count: session.candidateCount })}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <dl className="grid grid-cols-3 gap-2 text-center sm:flex sm:gap-4">
               <div className="rounded-md bg-slate-800 px-2 py-1 print:border print:border-slate-400 print:bg-white">
-                <dt className="text-xs text-slate-300 print:text-black">Bestanden</dt>
+                <dt className="text-xs text-slate-300 print:text-black">{t('exam.passed')}</dt>
                 <dd className="font-bold text-emerald-300 print:text-black">{passed}/{total} · {percentage(passed, total)}%</dd>
               </div>
               <div className="rounded-md bg-slate-800 px-2 py-1 print:border print:border-slate-400 print:bg-white">
-                <dt className="text-xs text-slate-300 print:text-black">Wiederholt</dt>
+                <dt className="text-xs text-slate-300 print:text-black">{t('exam.repeatedStat')}</dt>
                 <dd className="font-bold text-amber-300 print:text-black">{repeated}/{total} · {percentage(repeated, total)}%</dd>
               </div>
               <div className="rounded-md bg-slate-800 px-2 py-1 print:border print:border-slate-400 print:bg-white">
-                <dt className="text-xs text-slate-300 print:text-black">Nicht bestanden</dt>
+                <dt className="text-xs text-slate-300 print:text-black">{t('exam.failed')}</dt>
                 <dd className="font-bold text-red-300 print:text-black">{failed}/{total}</dd>
               </div>
               </dl>
@@ -147,7 +152,7 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
                 onClick={() => window.print()}
                 type="button"
               >
-                Drucken / PDF
+                {t('exam.print')}
               </button>
             </div>
           </div>
@@ -157,7 +162,7 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
       <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <div>
-            <h1 className="text-xl font-bold text-white">Prüfungsaufgaben</h1>
+            <h1 className="text-xl font-bold text-white">{t('exam.title')}</h1>
             <p className="text-sm text-slate-400">{session.date}</p>
           </div>
         </div>
@@ -174,12 +179,12 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
             ))}
           </div>
         ) : (
-          <p className="rounded-xl border border-slate-700 bg-panel p-5 text-slate-300">Für diese Prüfung wurden keine Aufgaben ausgewählt.</p>
+          <p className="rounded-xl border border-slate-700 bg-panel p-5 text-slate-300">{t('exam.noTasks')}</p>
         )}
 
         <div className="mt-8 border-t border-slate-700 pt-6 text-center print:hidden">
           <button className="rounded-md bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary" onClick={() => setConfirmNewExam(true)} type="button">
-            Neue Prüfung beginnen
+            {t('exam.newExam')}
           </button>
         </div>
       </main>
@@ -192,7 +197,7 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
                 onClick={() => setConfirmNewExam(false)}
                 type="button"
               >
-                Abbrechen
+                {t('exam.cancel')}
               </button>
               <button
                 className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary"
@@ -202,14 +207,14 @@ export function Exam({ session, onTaskChange, onNewExam }: ExamProps) {
                 }}
                 type="button"
               >
-                Neue Prüfung beginnen
+                {t('exam.newExam')}
               </button>
             </>
           )}
           onClose={() => setConfirmNewExam(false)}
-          title="Neue Prüfung beginnen?"
+          title={t('exam.confirmTitle')}
         >
-          <p>Möchtest du die aktuelle Prüfung wirklich beenden und eine neue Prüfung beginnen?</p>
+          <p>{t('exam.confirmMessage')}</p>
         </Modal>
       )}
     </div>

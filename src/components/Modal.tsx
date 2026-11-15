@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface ModalProps {
   title: string;
@@ -8,6 +9,7 @@ interface ModalProps {
 }
 
 export function Modal({ title, onClose, children, actions }: ModalProps) {
+  const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -37,7 +39,7 @@ export function Modal({ title, onClose, children, actions }: ModalProps) {
         <header className="flex items-center justify-between gap-4 border-b border-slate-700 px-5 py-4">
           <h2 className="text-lg font-semibold" id={titleId}>{title}</h2>
           <button
-            aria-label="Dialog schließen"
+            aria-label={t('modal.close')}
             className="rounded-md p-1 text-slate-300 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary"
             onClick={onClose}
             type="button"

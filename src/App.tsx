@@ -7,11 +7,13 @@ import { clearFailedLogins } from './lib/lockout';
 import { exportKey, importSessionKey, decryptWithKey, unlockData } from './lib/crypto';
 import { localDateString, selectTechniques } from './lib/random';
 import { clearActiveExam, defaultPreparationSettings, loadActiveExam, loadPreparationSettings, saveActiveExam, savePreparationSettings } from './lib/storage';
-import type { ExamData, ExamSession, ExamTask, PreparationSettings } from './lib/types';
+import type { ExamData, ExamSession, ExamTask, GeneralTask, PreparationSettings } from './lib/types';
+import { useI18n } from './i18n/I18nProvider';
 
 const SESSION_KEY = 'km-exam:session-key';
 
 export default function App() {
+  const { t } = useI18n();
   const [data, setData] = useState<ExamData | null>(null);
   const [settings, setSettings] = useState<PreparationSettings | null>(null);
   const [session, setSession] = useState<ExamSession | null>(null);
@@ -104,32 +106,38 @@ export default function App() {
   async function startExam() {
     if (!settings || !data) return;
     const date = localDateString();
-    const chosenTechniques = await selectTechniques(data.techniques, settings.techniqueCounts, {
-      firstName: settings.firstName,
-      lastName: settings.lastName,
-      level: settings.level,
-      candidateCount: settings.candidateCount,
-      date,
-    });
+    let chosenTechniques;
+    try {
+      chosenTechniques = await selectTechniques(data.techniques, settings.techniqueCounts, {
+        firstName: settings.firstName,
+        lastName: settings.lastName,
+        level: settings.level,
+        candidateCount: settings.candidateCount,
+        date,
+      });
+    } catch {
+      throw new Error(t('preparation.startError'));
+    }
     const beforeTasks = data.generalTasks
       .filter((task) => settings.generalTaskPlacements[task.id] === 'before')
-      .map((task) => makeGeneralTask(task.id, task.text, task.details));
+      .map((task) => makeGeneralTask(task));
     const afterTasks = data.generalTasks
       .filter((task) => settings.generalTaskPlacements[task.id] === 'after')
-      .map((task) => makeGeneralTask(task.id, task.text, task.details));
+      .map((task) => makeGeneralTask(task));
     const techniqueTasks = chosenTechniques.map<ExamTask>((technique) => ({
       id: `technique-${technique.level}-${technique.text}`,
       kind: 'technique',
       text: technique.text,
       level: technique.level,
       details: technique.details,
+      translations: technique.translations,
       passed: false,
       failed: false,
       repeated: false,
       note: '',
     }));
     const tasks = [...beforeTasks, ...techniqueTasks, ...afterTasks];
-    if (tasks.length === 0) throw new Error('Bitte wähle mindestens eine Technik oder allgemeine Prüfungsaufgabe aus.');
+    if (tasks.length === 0) throw new Error(t('preparation.noTasksError'));
 
     const nextSession: ExamSession = {
       firstName: settings.firstName.trim(),
@@ -162,7 +170,7 @@ export default function App() {
   }
 
   if (checkingSession) {
-    return <main className="flex min-h-screen items-center justify-center px-4 text-slate-300">App wird geladen …</main>;
+    return <main className="flex min-h-screen items-center justify-center px-4 text-slate-300">{t('app.loading')}</main>;
   }
 
   if (!data || !settings) return <Login onUnlock={unlock} />;
@@ -171,12 +179,13 @@ export default function App() {
   return <Preparation data={data} onChange={updateSettings} onLock={lockApp} onStart={startExam} settings={settings} />;
 }
 
-function makeGeneralTask(id: string, text: string, details?: string): ExamTask {
+function makeGeneralTask(task: GeneralTask): ExamTask {
   return {
-    id: `general-${id}`,
+    id: `general-${task.id}`,
     kind: 'general',
-    text,
-    details,
+    text: task.text,
+    details: task.details,
+    translations: task.translations,
     passed: false,
     failed: false,
     repeated: false,
