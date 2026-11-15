@@ -62,7 +62,7 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
       </div>
 
       <p className="mb-6 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-orange-100">
-        Alle Prüfer müssen exakt die gleichen Daten eingeben. Eine Abweichung und die Prüfungsaufgaben weichen voneinander ab.
+        Alle Prüfer müssen exakt die gleichen Daten eingeben. Eine Abweichung und die Prüfungsaufgaben stimmen nicht mehr überein.
       </p>
 
       <form className="space-y-6" onSubmit={submit}>
@@ -185,7 +185,7 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
         </section>
 
         {error && <p aria-live="polite" className="rounded-md border border-red-800 bg-red-950/50 px-4 py-3 text-sm text-red-200">{error}</p>}
-        <button className="w-full rounded-md bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 sm:w-auto" disabled={busy} type="submit">
+        <button className="mx-auto block w-full rounded-md bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 sm:w-auto" disabled={busy} type="submit">
           {busy ? 'Prüfung wird vorbereitet …' : 'Prüfung starten'}
         </button>
       </form>
