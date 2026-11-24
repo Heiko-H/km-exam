@@ -3,11 +3,11 @@ import { createSeedString, fisherYates, selectTechniques } from './random';
 import type { Level, Technique } from './types';
 
 const techniques: Technique[] = [
-  { level: 1, text: 'A' },
-  { level: 1, text: 'B' },
-  { level: 1, text: 'C' },
-  { level: 2, text: 'D' },
-  { level: 2, text: 'E' },
+  { id: 'a', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'A' },
+  { id: 'b', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'B' },
+  { id: 'c', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'C' },
+  { id: 'd', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', text: 'D' },
+  { id: 'e', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', text: 'E' },
 ];
 const counts: Record<Level, number> = { 1: 2, 2: 1, 3: 0, 4: 0, 5: 0 };
 const seed = { firstName: 'Ada', lastName: 'Lovelace', level: 2 as const, candidateCount: 4, date: '2026-11-13' };

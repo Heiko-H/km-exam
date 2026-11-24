@@ -35,7 +35,7 @@ export async function deriveEncryptionKey(password: string, payload: EncryptedPa
     passwordKey,
     { name: 'AES-GCM', length: 256 },
     true,
-    ['decrypt'],
+    ['decrypt', 'encrypt'],
   );
 }
 
@@ -45,11 +45,11 @@ export async function decryptWithKey(key: CryptoKey, payload: EncryptedPayload):
     key,
     decodeBase64(payload.data),
   );
-  const parsed = JSON.parse(new TextDecoder().decode(decrypted)) as ExamData;
+  const parsed = JSON.parse(new TextDecoder().decode(decrypted)) as Partial<ExamData>;
   if (!Array.isArray(parsed.techniques) || !Array.isArray(parsed.generalTasks)) {
     throw new Error('Die entschlüsselten Prüfungsdaten haben ein ungültiges Format.');
   }
-  return parsed;
+  return { ...parsed, tags: Array.isArray(parsed.tags) ? parsed.tags : [] } as ExamData;
 }
 
 export async function unlockData(password: string, payload: EncryptedPayload): Promise<{ data: ExamData; key: CryptoKey }> {
@@ -63,5 +63,5 @@ export async function exportKey(key: CryptoKey): Promise<string> {
 }
 
 export async function importSessionKey(encodedKey: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', decodeBase64(encodedKey), { name: 'AES-GCM' }, true, ['decrypt']);
+  return crypto.subtle.importKey('raw', decodeBase64(encodedKey), { name: 'AES-GCM' }, true, ['decrypt', 'encrypt']);
 }

@@ -6,9 +6,10 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   actions?: ReactNode;
+  size?: 'default' | 'large';
 }
 
-export function Modal({ title, onClose, children, actions }: ModalProps) {
+export function Modal({ title, onClose, children, actions, size = 'default' }: ModalProps) {
   const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -25,7 +26,7 @@ export function Modal({ title, onClose, children, actions }: ModalProps) {
   return (
     <dialog
       aria-labelledby={titleId}
-      className="fixed inset-0 m-auto max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] text-base max-w-lg border-0 bg-transparent p-0 text-white backdrop:bg-black/70 print:hidden"
+      className={`fixed inset-0 m-auto max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] border-0 bg-transparent p-0 text-base text-white backdrop:bg-black/70 print:hidden ${size === 'large' ? 'max-w-5xl' : 'max-w-lg'}`}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -35,8 +36,8 @@ export function Modal({ title, onClose, children, actions }: ModalProps) {
       }}
       ref={dialogRef}
     >
-      <section className="overflow-hidden rounded-xl border border-slate-600 bg-panel shadow-2xl">
-        <header className="flex items-center justify-between gap-4 border-b border-slate-700 px-5 py-4">
+      <section className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-xl border border-slate-600 bg-panel shadow-2xl">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-700 px-5 py-4">
           <h2 className="text-lg font-semibold" id={titleId}>{title}</h2>
           <button
             aria-label={t('modal.close')}
@@ -49,8 +50,8 @@ export function Modal({ title, onClose, children, actions }: ModalProps) {
             </svg>
           </button>
         </header>
-        <div className="px-5 py-4 text-slate-200">{children}</div>
-        {actions && <footer className="flex flex-wrap justify-end gap-2 border-t border-slate-700 px-5 py-4">{actions}</footer>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-slate-200">{children}</div>
+        {actions && <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-700 px-5 py-4">{actions}</footer>}
       </section>
     </dialog>
   );

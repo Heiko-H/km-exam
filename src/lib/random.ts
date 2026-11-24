@@ -1,4 +1,10 @@
-import type { Level, Technique } from './types';
+import type { Category, Level, Technique } from './types';
+
+export function levelOf(technique: { level?: Level; category?: Category }): Level | undefined {
+  if (technique.level) return technique.level;
+  const match = (technique.category as Category | undefined)?.match(/^level-([1-5])$/);
+  return match ? Number(match[1]) as Level : undefined;
+}
 
 export interface SeedInputs {
   firstName: string;
@@ -49,7 +55,7 @@ export async function selectTechniques(
   const selected: Technique[] = [];
 
   for (const level of [1, 2, 3, 4, 5] as const) {
-    const available = techniques.filter((technique) => technique.level === level);
+    const available = techniques.filter((technique) => levelOf(technique) === level);
     const count = counts[level];
     if (!Number.isInteger(count) || count < 0 || count > available.length) {
       throw new Error(`Für Stufe ${level} ist eine ungültige Technikanzahl ausgewählt.`);

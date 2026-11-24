@@ -16,7 +16,11 @@ export interface EncryptedPayload {
 }
 
 interface TechniqueInput {
-  level: number;
+  id?: string;
+  level?: number;
+  category?: string;
+  tags?: string[];
+  modification_date?: string;
   text: string;
   details?: string;
   translations?: unknown;
@@ -24,7 +28,18 @@ interface TechniqueInput {
 
 interface GeneralTaskInput {
   id: string;
+  category?: string;
+  tags?: string[];
+  modification_date?: string;
   text: string;
+  details?: string;
+  translations?: unknown;
+}
+
+interface TagInput {
+  id: string;
+  text: string;
+  modification_date: string;
   details?: string;
   translations?: unknown;
 }
@@ -67,7 +82,28 @@ function validateTranslations(item: { translations?: unknown }, label: string, w
   }
 }
 
-function validateData(techniques: unknown, generalTasks: unknown): string[] {
+function normalizedDate(value: unknown): string {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))) return value;
+  return '2026-11-24';
+}
+
+function slug(value: string): string {
+  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function inferTags(text: string): string[] {
+  const normalized = text.toLocaleLowerCase('de');
+  const tags = new Set<string>();
+  if (/pistole|waffe/.test(normalized)) tags.add('pistol');
+  if (/messer/.test(normalized)) tags.add('knife');
+  if (/schläger|baton/.test(normalized)) tags.add('baton');
+  if (/haken|schlag|würg/.test(normalized)) tags.add('strike');
+  if (/kick|tritt/.test(normalized)) tags.add('kick');
+  if (/boden|mount|grappling/.test(normalized)) tags.add('ground');
+  return [...tags];
+}
+
+function validateData(techniques: unknown, generalTasks: unknown, tags: unknown): string[] {
   const warnings: string[] = [];
   if (!Array.isArray(techniques) || techniques.length === 0) {
     throw new Error('data/techniques.json muss mindestens eine Technik enthalten.');
@@ -75,7 +111,8 @@ function validateData(techniques: unknown, generalTasks: unknown): string[] {
   const seenTexts = new Set<string>();
   for (const [index, item] of techniques.entries()) {
     const technique = item as TechniqueInput;
-    if (!Number.isInteger(technique?.level) || technique.level < 1 || technique.level > 5) {
+    const level = technique?.level ?? Number(technique?.category?.replace('level-', ''));
+    if (!Number.isInteger(level) || level < 1 || level > 5) {
       throw new Error(`Technik ${index + 1}: level muss eine ganze Zahl von 1 bis 5 sein.`);
     }
     if (typeof technique.text !== 'string' || technique.text.trim().length === 0) {
@@ -110,6 +147,15 @@ function validateData(techniques: unknown, generalTasks: unknown): string[] {
     validateTranslations(task, `Allgemeine Aufgabe ${index + 1}`, warnings, task.details !== undefined);
     seenIds.add(task.id);
   }
+  if (!Array.isArray(tags)) throw new Error('data/tags.json muss eine Liste enthalten.');
+  const tagIds = new Set<string>();
+  for (const [index, item] of tags.entries()) {
+    const tag = item as TagInput;
+    if (!tag?.id || !tag.text?.trim() || tagIds.has(tag.id)) throw new Error(`Tag ${index + 1}: id oder Titel fehlt bzw. id ist doppelt.`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(tag.modification_date)) throw new Error(`Tag ${tag.id}: modification_date muss YYYY-MM-DD sein.`);
+    validateTranslations(tag, `Tag ${tag.id}`, warnings, false);
+    tagIds.add(tag.id);
+  }
   return warnings;
 }
 
@@ -117,17 +163,36 @@ export function encryptAppData(
   password: string,
   techniques: unknown,
   generalTasks: unknown,
+  tags: unknown = [],
 ): EncryptedPayload {
   if (!password || password.trim().length < 12) {
     throw new Error('APP_PASSWORD muss gesetzt sein und mindestens 12 Zeichen enthalten.');
   }
-  validateData(techniques, generalTasks);
+  validateData(techniques, generalTasks, tags);
+
+  const canonicalTechniques = (techniques as TechniqueInput[]).map((technique) => {
+    const level = (technique.level ?? Number(technique.category?.replace('level-', ''))) as 1 | 2 | 3 | 4 | 5;
+    return {
+      ...technique,
+      id: technique.id || `technique-${level}-${slug(technique.text)}`,
+      level,
+      category: `level-${level}`,
+      tags: technique.tags ?? inferTags(technique.text),
+      modification_date: normalizedDate(technique.modification_date),
+    };
+  });
+  const canonicalGeneralTasks = (generalTasks as GeneralTaskInput[]).map((task) => ({
+    ...task,
+    category: 'general' as const,
+    tags: task.tags ?? [],
+    modification_date: normalizedDate(task.modification_date),
+  }));
 
   const salt = randomBytes(16);
   const iv = randomBytes(12);
   const key = pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, 'sha256');
   const cipher = createCipheriv('aes-256-gcm', key, iv);
-  const plaintext = Buffer.from(JSON.stringify({ techniques, generalTasks }), 'utf8');
+  const plaintext = Buffer.from(JSON.stringify({ techniques: canonicalTechniques, generalTasks: canonicalGeneralTasks, tags }), 'utf8');
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authenticatedData = Buffer.concat([ciphertext, cipher.getAuthTag()]);
 
@@ -155,8 +220,9 @@ export function encryptedDataPlugin(password: string | undefined, dataDirectory:
       try {
         const techniques = JSON.parse(readFileSync(resolve(dataDirectory, 'techniques.json'), 'utf8')) as unknown;
         const generalTasks = JSON.parse(readFileSync(resolve(dataDirectory, 'general-tasks.json'), 'utf8')) as unknown;
-        for (const warning of validateData(techniques, generalTasks)) this.warn(warning);
-        encryptedPayload = encryptAppData(password, techniques, generalTasks);
+        const tags = JSON.parse(readFileSync(resolve(dataDirectory, 'tags.json'), 'utf8')) as unknown;
+        for (const warning of validateData(techniques, generalTasks, tags)) this.warn(warning);
+        encryptedPayload = encryptAppData(password, techniques, generalTasks, tags);
       } catch (error) {
         this.error(error instanceof Error ? error.message : 'Die Prüfungsdaten konnten nicht verschlüsselt werden.');
       }

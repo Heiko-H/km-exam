@@ -4,6 +4,9 @@ import { Stepper } from './Stepper';
 import { InfoButton } from './InfoButton';
 import { useI18n } from '../i18n/I18nProvider';
 import { localize } from '../i18n/localize';
+import { levelOf } from '../lib/random';
+import { PageHeader } from './PageHeader';
+import type { AppRoute } from './NavigationMenu';
 
 interface PreparationProps {
   data: ExamData;
@@ -11,6 +14,8 @@ interface PreparationProps {
   onChange: (settings: PreparationSettings) => void;
   onStart: () => Promise<void>;
   onLock: () => void;
+  onNavigate: (route: AppRoute) => void;
+  activeRoute: AppRoute;
 }
 
 const placementOptions = [
@@ -19,7 +24,7 @@ const placementOptions = [
   { value: 'after', labelKey: 'preparation.after', shortLabelKey: 'preparation.afterShort' },
 ] as const;
 
-export function Preparation({ data, settings, onChange, onStart, onLock }: PreparationProps) {
+export function Preparation({ data, settings, onChange, onStart, onLock, onNavigate, activeRoute }: PreparationProps) {
   const { language, t } = useI18n();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -53,16 +58,9 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
   const inputClass = 'mt-1 w-full rounded-md border border-slate-600 bg-field px-3 py-2.5 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30';
 
   return (
+    <>
+    <PageHeader activeRoute={activeRoute} onLock={onLock} onNavigate={onNavigate} title={t('preparation.title')} />
     <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">{t('preparation.brand')}</p>
-          <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">{t('preparation.title')}</h1>
-        </div>
-        <button className="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={onLock} type="button">
-          {t('preparation.lock')}
-        </button>
-      </div>
 
       <p className="mb-6 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-orange-100">
         {t('preparation.syncWarning')}
@@ -117,7 +115,7 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
           <p className="mb-4 text-sm text-slate-400">{t('preparation.techniqueInstructions')}</p>
           <div className="space-y-3">
             {LEVELS.map((level) => {
-              const max = data.techniques.filter((technique) => technique.level === level).length;
+              const max = data.techniques.filter((technique) => levelOf(technique) === level).length;
               return (
                 <div className="flex flex-col gap-3 rounded-lg border border-slate-700 px-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={level}>
                   <span className="font-medium text-slate-100">{t('preparation.levelOption', { level })}<span className="ml-2 text-sm font-normal text-slate-400">({t('preparation.available', { count: max })})</span></span>
@@ -196,5 +194,6 @@ export function Preparation({ data, settings, onChange, onStart, onLock }: Prepa
         </button>
       </form>
     </main>
+    </>
   );
 }

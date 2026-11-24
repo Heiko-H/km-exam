@@ -1,0 +1,8 @@
+[
+  { "id": "pistol", "text": "Pistole", "modification_date": "2026-11-24", "translations": { "en": { "text": "Pistol" }, "fr": { "text": "Pistolet" }, "it": { "text": "Pistola" }, "es": { "text": "Pistola" } } },
+  { "id": "knife", "text": "Messer", "modification_date": "2026-11-24", "translations": { "en": { "text": "Knife" }, "fr": { "text": "Couteau" }, "it": { "text": "Coltello" }, "es": { "text": "Cuchillo" } } },
+  { "id": "baton", "text": "Baton", "modification_date": "2026-11-24", "translations": { "en": { "text": "Baton" }, "fr": { "text": "Bâton" }, "it": { "text": "Bastone" }, "es": { "text": "Bastón" } } },
+  { "id": "strike", "text": "Schlag", "modification_date": "2026-11-24", "translations": { "en": { "text": "Strike" }, "fr": { "text": "Coup" }, "it": { "text": "Colpo" }, "es": { "text": "Golpe" } } },
+  { "id": "kick", "text": "Tritt", "modification_date": "2026-11-24", "translations": { "en": { "text": "Kick" }, "fr": { "text": "Coup de pied" }, "it": { "text": "Calcio" }, "es": { "text": "Patada" } } },
+  { "id": "ground", "text": "Boden", "modification_date": "2026-11-24", "translations": { "en": { "text": "Ground" }, "fr": { "text": "Sol" }, "it": { "text": "Terre" }, "es": { "text": "Suelo" } } }
+]

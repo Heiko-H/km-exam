@@ -3,14 +3,14 @@ import type { Language } from '../lib/types';
 import { useI18n } from '../i18n/I18nProvider';
 
 const languages: { code: Language; name: string }[] = [
-  { code: 'de', name: 'Deutsch' },
   { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
   { code: 'it', name: 'Italiano' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'fr', name: 'Français' },
   { code: 'es', name: 'Español' },
 ];
 
-function Flag({ language }: { language: Language }) {
+export function FlagIcon({ language }: { language: Language }) {
   const common = { width: 30, height: 20, viewBox: '0 0 30 20', className: 'rounded-sm border border-white/20' };
   if (language === 'de') return <svg {...common} aria-hidden="true"><rect width="30" height="20" fill="#ffce00" /><rect width="30" height="13.33" fill="#dd0000" /><rect width="30" height="6.67" /></svg>;
   if (language === 'fr') return <svg {...common} aria-hidden="true"><rect width="10" height="20" fill="#002395" /><rect x="10" width="10" height="20" fill="#fff" /><rect x="20" width="10" height="20" fill="#ed2939" /></svg>;
@@ -57,7 +57,7 @@ export function LanguageSelect() {
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
-        <Flag language={language} />
+        <FlagIcon language={language} />
         <span aria-hidden="true" className="text-xs">▾</span>
       </button>
       {open && (
@@ -74,7 +74,7 @@ export function LanguageSelect() {
               role="option"
               type="button"
             >
-              <Flag language={item.code} />
+              <FlagIcon language={item.code} />
               <span>{item.name}</span>
             </button>
           ))}

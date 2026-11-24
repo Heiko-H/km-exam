@@ -8,7 +8,11 @@ describe('encrypted exam data', () => {
     const generalTasks = [{ id: 'sparring', text: 'Sparring' }];
     const payload = encryptAppData('eine-sichere-testpassphrase', techniques, generalTasks);
     const key = await deriveEncryptionKey('eine-sichere-testpassphrase', payload);
-    await expect(decryptWithKey(key, payload)).resolves.toEqual({ techniques, generalTasks });
+    await expect(decryptWithKey(key, payload)).resolves.toEqual({
+      techniques: [{ ...techniques[0], id: 'technique-1-abwehr-von-haken', category: 'level-1', tags: ['strike'], modification_date: '2026-11-24' }],
+      generalTasks: [{ ...generalTasks[0], category: 'general', tags: [], modification_date: '2026-11-24' }],
+      tags: [],
+    });
   });
 
   it('rejects an incorrect password', async () => {

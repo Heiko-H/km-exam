@@ -1,7 +1,8 @@
 import { LEVELS, type ExamSession, type GeneralTask, type GeneralTaskPlacement, type Level, type PreparationSettings } from './types';
+import { levelOf } from './random';
 
 const SETTINGS_KEY = 'km-exam:preparation';
-const ACTIVE_EXAM_KEY = 'km-exam:active-exam';
+const ACTIVE_EXAM_KEYS = { random: 'km-exam:active-exam:random', general: 'km-exam:active-exam:general' } as const;
 
 export function defaultPreparationSettings(generalTasks: readonly GeneralTask[]): PreparationSettings {
   return {
@@ -15,7 +16,7 @@ export function defaultPreparationSettings(generalTasks: readonly GeneralTask[])
 }
 
 export function loadPreparationSettings(
-  techniques: readonly { level: Level }[],
+  techniques: readonly { level?: Level; category?: `level-${Level}` | 'general' | 'other' }[],
   generalTasks: readonly GeneralTask[],
 ): PreparationSettings {
   const defaults = defaultPreparationSettings(generalTasks);
@@ -25,7 +26,7 @@ export function loadPreparationSettings(
     const stored = JSON.parse(raw) as Partial<PreparationSettings>;
     const counts = { ...defaults.techniqueCounts };
     for (const level of LEVELS) {
-      const max = techniques.filter((technique) => technique.level === level).length;
+      const max = techniques.filter((technique) => levelOf(technique as { level?: Level; category?: `level-${Level}` | 'general' | 'other' }) === level).length;
       const proposed = stored.techniqueCounts?.[level];
       counts[level] = Number.isInteger(proposed) ? Math.min(max, Math.max(0, Number(proposed))) : 0;
     }
@@ -51,22 +52,26 @@ export function savePreparationSettings(settings: PreparationSettings): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-export function loadActiveExam(): ExamSession | null {
+export function loadActiveExam(kind: 'random' | 'general' = 'random'): ExamSession | null {
   try {
-    const raw = localStorage.getItem(ACTIVE_EXAM_KEY);
+    const raw = localStorage.getItem(ACTIVE_EXAM_KEYS[kind]) ?? (kind === 'random' ? localStorage.getItem('km-exam:active-exam') : null);
     if (!raw) return null;
     const session = JSON.parse(raw) as ExamSession;
-    if (!session.firstName || !session.lastName || !LEVELS.includes(session.level) || !Array.isArray(session.tasks)) return null;
-    return session;
+    if ((!session.firstName && !session.candidateName) || (!session.lastName && session.kind !== 'general' && kind !== 'general') || !LEVELS.includes(session.level) || !Array.isArray(session.tasks)) return null;
+    return { ...session, kind: session.kind ?? kind };
   } catch {
     return null;
   }
 }
 
 export function saveActiveExam(session: ExamSession): void {
-  localStorage.setItem(ACTIVE_EXAM_KEY, JSON.stringify(session));
+  localStorage.setItem(ACTIVE_EXAM_KEYS[session.kind === 'general' ? 'general' : 'random'], JSON.stringify(session));
 }
 
-export function clearActiveExam(): void {
-  localStorage.removeItem(ACTIVE_EXAM_KEY);
+export function clearActiveExam(kind?: 'random' | 'general'): void {
+  if (!kind || kind === 'random') {
+    localStorage.removeItem(ACTIVE_EXAM_KEYS.random);
+    localStorage.removeItem('km-exam:active-exam');
+  }
+  if (!kind || kind === 'general') localStorage.removeItem(ACTIVE_EXAM_KEYS.general);
 }

@@ -29,8 +29,9 @@ describe('localize', () => {
   it('includes translations for all exam data in English, French, Italian and Spanish', () => {
     const techniques = readDataFile<Array<LocalizedText & { level: number }>>('techniques.json');
     const generalTasks = readDataFile<Array<LocalizedText & { id: string }>>('general-tasks.json');
+    const tags = readDataFile<Array<LocalizedText & { id: string }>>('tags.json');
 
-    for (const item of [...techniques, ...generalTasks]) {
+    for (const item of [...techniques, ...generalTasks, ...tags]) {
       for (const language of translatedLanguages) {
         expect(item.translations?.[language]?.text, `${item.text} / ${language} text`).toBeTruthy();
         if (item.details) {
