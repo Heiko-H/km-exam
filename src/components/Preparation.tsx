@@ -60,7 +60,7 @@ export function Preparation({ data, settings, onChange, onStart, onLock, onNavig
   return (
     <>
     <PageHeader activeRoute={activeRoute} onLock={onLock} onNavigate={onNavigate} title={t('preparation.title')} />
-    <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
 
       <p className="mb-6 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-orange-100">
         {t('preparation.syncWarning')}

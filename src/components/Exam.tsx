@@ -236,7 +236,9 @@ export function Exam({ session, onTaskChange, onGeneralNoteChange, onNewExam, on
                 <dd className="font-bold text-red-300 print:text-black">{failed}/{total}</dd>
               </div>
               </dl>
-              <IconButton className="hidden print:hidden sm:inline-flex" icon="print" label={t('exam.print')} onClick={() => window.print()} />
+              <div className="hidden sm:block print:hidden">
+                <IconButton icon="print" label={t('exam.print')} onClick={() => window.print()} />
+              </div>
             </div>
           </div>
         </div>
