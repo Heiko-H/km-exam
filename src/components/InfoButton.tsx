@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
+import { RichText } from './RichText';
 
 interface InfoButtonProps {
   title: string;
@@ -26,7 +27,7 @@ export function InfoButton({ title, details }: InfoButtonProps) {
       </button>
       {showDetails && (
         <Modal onClose={() => setShowDetails(false)} title={title}>
-          <p className="whitespace-pre-wrap">{details}</p>
+          <RichText html={details} />
         </Modal>
       )}
     </>

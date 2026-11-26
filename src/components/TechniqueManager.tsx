@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { localize } from '../i18n/localize';
 import { useI18n } from '../i18n/I18nProvider';
-import type { Category, Language, Tag, Technique, TranslationLanguage, Translations } from '../lib/types';
+import type { Category, Language, Tag, Technique, TranslationLanguage } from '../lib/types';
 import { FlagIcon } from './LanguageSelect';
 import { IconButton } from './Icons';
 import { Modal } from './Modal';
 import { PageHeader } from './PageHeader';
 import type { AppRoute } from './NavigationMenu';
+import { RichTextEditor } from './RichTextEditor';
 
 const languages: Language[] = ['en', 'it', 'de', 'fr', 'es'];
 const categories: Category[] = ['level-1', 'level-2', 'level-3', 'level-4', 'level-5', 'general', 'other'];
@@ -19,12 +20,13 @@ function categoryName(category: Category, t: ReturnType<typeof useI18n>['t']): s
 }
 
 function newTechnique(): Technique {
-  return { id: crypto.randomUUID(), category: 'other', tags: [], modification_date: new Date().toISOString(), text: '' };
+  return { id: crypto.randomUUID(), title: '', text: '', teaser: '', category: 'other', tags: [], modification_date: new Date().toISOString() };
 }
 
-function localizedText(item: { text: string; details?: string; translations?: Translations }, language: Language) {
-  if (language === 'de') return { text: item.text, details: item.details ?? '' };
-  return { text: item.translations?.[language]?.text ?? '', details: item.translations?.[language]?.details ?? '' };
+function localizedText(item: Technique, language: Language) {
+  if (language === 'de') return { title: item.title || item.text, teaser: item.teaser ?? '', details: item.details ?? '' };
+  const translation = item.translations?.[language];
+  return { title: translation?.title ?? translation?.text ?? '', teaser: translation?.teaser ?? '', details: translation?.details ?? '' };
 }
 
 interface TechniqueManagerProps {
@@ -113,7 +115,7 @@ export function TechniqueManager({ items, tags, activeRoute, onNavigate, onLock,
           </div>
           <div className="flex gap-2">
             {tab === 'techniques' && <IconButton icon="plus" label={t('tech.new')} onClick={() => setEditingItem(newTechnique())} />}
-            {tab === 'tags' && <IconButton icon="plus" label={t('tech.newTag')} onClick={() => setEditingTag({ id: crypto.randomUUID(), text: '', modification_date: new Date().toISOString() })} />}
+            {tab === 'tags' && <IconButton icon="plus" label={t('tech.newTag')} onClick={() => setEditingTag({ id: crypto.randomUUID(), title: '', text: '', modification_date: new Date().toISOString() })} />}
             <IconButton disabled icon="upload" label={t('tech.upload')} />
             <IconButton disabled icon="download" label={t('tech.download')} />
           </div>
@@ -213,9 +215,9 @@ function TechniqueEditor({ item, tags, onClose, onSave }: { item: Technique; tag
   const current = localizedText(draft, editLanguage);
   const translatedTags = tags.map((tag) => ({ tag, title: localize(tag, language).text }));
 
-  function changeLocalized(values: { text: string; details: string }) {
+  function changeLocalized(values: { title: string; teaser: string; details: string }) {
     if (editLanguage === 'de') {
-      setDraft((currentDraft) => ({ ...currentDraft, text: values.text, details: values.details || undefined }));
+      setDraft((currentDraft) => ({ ...currentDraft, title: values.title, text: values.title, teaser: values.teaser, details: values.details || undefined }));
       return;
     }
     const translationLanguage = editLanguage as TranslationLanguage;
@@ -223,7 +225,7 @@ function TechniqueEditor({ item, tags, onClose, onSave }: { item: Technique; tag
       ...currentDraft,
       translations: {
         ...currentDraft.translations,
-        [translationLanguage]: { text: values.text, details: values.details || undefined },
+        [translationLanguage]: { ...currentDraft.translations?.[translationLanguage], title: values.title, text: values.title, teaser: values.teaser || undefined, details: values.details || undefined },
       },
     }));
   }
@@ -237,8 +239,9 @@ function TechniqueEditor({ item, tags, onClose, onSave }: { item: Technique; tag
       <LanguageTabs onSelect={setEditLanguage} selected={editLanguage} />
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-300">{t('tech.name')}<input className="mt-1 min-h-11 w-full rounded-md border border-slate-600 bg-field px-3 text-white outline-none focus:border-primary" onChange={(event) => changeLocalized({ ...current, text: event.target.value })} value={current.text} /></label>
-          <label className="block text-sm font-medium text-slate-300">{t('tech.details')}<textarea className="mt-1 min-h-32 w-full resize-y rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary" onChange={(event) => changeLocalized({ ...current, details: event.target.value })} value={current.details} /></label>
+          <label className="block text-sm font-medium text-slate-300">{t('tech.name')}<input className="mt-1 min-h-11 w-full rounded-md border border-slate-600 bg-field px-3 text-white outline-none focus:border-primary" onChange={(event) => changeLocalized({ ...current, title: event.target.value })} value={current.title} /></label>
+          <label className="block text-sm font-medium text-slate-300">{t('tech.teaser')}<textarea className="mt-1 min-h-20 w-full resize-y rounded-md border border-slate-600 bg-field px-3 py-2 text-white outline-none focus:border-primary" maxLength={200} onChange={(event) => changeLocalized({ ...current, teaser: event.target.value })} value={current.teaser} /><span className="text-xs text-slate-500">{t('tech.characters', { count: current.teaser.length })}</span></label>
+          <div className="text-sm font-medium text-slate-300">{t('tech.details')}<div className="mt-1"><RichTextEditor onChange={(details) => changeLocalized({ ...current, details })} value={current.details} /></div></div>
         </div>
         <div className="space-y-5">
           <fieldset>
@@ -263,7 +266,7 @@ function TechniqueEditor({ item, tags, onClose, onSave }: { item: Technique; tag
       </div>
       <div className="mt-5 flex justify-end gap-2 border-t border-slate-700 pt-4">
         <button className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-200" onClick={onClose} type="button">{t('exam.cancel')}</button>
-        <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40" disabled={!draft.text.trim()} onClick={() => onSave(draft)} type="button">{t('tech.save')}</button>
+        <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40" disabled={!draft.title.trim()} onClick={() => onSave(draft)} type="button">{t('tech.save')}</button>
       </div>
     </Modal>
   );
@@ -273,13 +276,13 @@ function TagEditor({ tag, onClose, onSave }: { tag: Tag; onClose: () => void; on
   const { language, t } = useI18n();
   const [draft, setDraft] = useState(tag);
   const [editLanguage, setEditLanguage] = useState<Language>(language);
-  const text = editLanguage === 'de' ? draft.text : draft.translations?.[editLanguage as TranslationLanguage]?.text ?? '';
+  const text = editLanguage === 'de' ? draft.title || draft.text : draft.translations?.[editLanguage as TranslationLanguage]?.title ?? draft.translations?.[editLanguage as TranslationLanguage]?.text ?? '';
 
   function changeText(value: string) {
-    if (editLanguage === 'de') setDraft((current) => ({ ...current, text: value }));
+    if (editLanguage === 'de') setDraft((current) => ({ ...current, title: value, text: value }));
     else {
       const key = editLanguage as TranslationLanguage;
-      setDraft((current) => ({ ...current, translations: { ...current.translations, [key]: { ...current.translations?.[key], text: value } } }));
+      setDraft((current) => ({ ...current, translations: { ...current.translations, [key]: { ...current.translations?.[key], title: value, text: value } } }));
     }
   }
 
@@ -289,7 +292,7 @@ function TagEditor({ tag, onClose, onSave }: { tag: Tag; onClose: () => void; on
       <label className="block text-sm font-medium text-slate-300">{t('tech.name')}<input autoFocus className="mt-1 min-h-11 w-full rounded-md border border-slate-600 bg-field px-3 text-white outline-none focus:border-primary" onChange={(event) => changeText(event.target.value)} value={text} /></label>
       <div className="mt-5 flex justify-end gap-2 border-t border-slate-700 pt-4">
         <button className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-200" onClick={onClose} type="button">{t('exam.cancel')}</button>
-        <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40" disabled={!draft.text.trim()} onClick={() => onSave(draft)} type="button">{t('tech.save')}</button>
+        <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-40" disabled={!draft.title.trim()} onClick={() => onSave(draft)} type="button">{t('tech.save')}</button>
       </div>
     </Modal>
   );

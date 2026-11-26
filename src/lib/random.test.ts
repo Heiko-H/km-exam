@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { createSeedString, fisherYates, selectTechniques } from './random';
+import { createSeedString, fisherYates, selectExamTechniques, selectTechniques } from './random';
 import type { Level, Technique } from './types';
 
 const techniques: Technique[] = [
-  { id: 'a', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'A' },
-  { id: 'b', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'B' },
-  { id: 'c', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', text: 'C' },
-  { id: 'd', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', text: 'D' },
-  { id: 'e', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', text: 'E' },
+  { id: 'a', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', title: 'A', text: 'A' },
+  { id: 'b', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', title: 'B', text: 'B' },
+  { id: 'c', level: 1, category: 'level-1', tags: [], modification_date: '2026-11-24', title: 'C', text: 'C' },
+  { id: 'd', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', title: 'D', text: 'D' },
+  { id: 'e', level: 2, category: 'level-2', tags: [], modification_date: '2026-11-24', title: 'E', text: 'E' },
 ];
 const counts: Record<Level, number> = { 1: 2, 2: 1, 3: 0, 4: 0, 5: 0 };
 const seed = { firstName: 'Ada', lastName: 'Lovelace', level: 2 as const, candidateCount: 4, date: '2026-11-13' };
@@ -29,6 +29,14 @@ describe('deterministic technique selection', () => {
 
   it('rejects counts above the available number of techniques', async () => {
     await expect(selectTechniques(techniques, { ...counts, 1: 4 }, seed)).rejects.toThrow('Stufe 1');
+  });
+
+  it('selects exam techniques deterministically from location, date, level and sequence', async () => {
+    const inputs = { location: 'Dojo Berlin', date: '2026-12-01', level: 2 as const, sequence: 1 };
+    const first = await selectExamTechniques(techniques, counts, inputs);
+    const again = await selectExamTechniques(techniques, counts, inputs);
+    expect(first.map((item) => item.id)).toEqual(again.map((item) => item.id));
+    expect(first).toHaveLength(3);
   });
 
   it('shuffles a copy and preserves every item', () => {

@@ -7,19 +7,25 @@ export type TranslationLanguage = Exclude<Language, 'de'>;
 export type Category = `level-${Level}` | 'general' | 'other';
 
 export interface TranslatedContent {
-  text: string;
+  title?: string;
+  teaser?: string;
   details?: string;
+  text?: string;
 }
 
 export type Translations = Partial<Record<TranslationLanguage, TranslatedContent>>;
 
 export interface LocalizedText {
-  text: string;
+  title?: string;
+  teaser?: string;
   details?: string;
+  /** Compatibility field for previously persisted local drafts. */
+  text: string;
   translations?: Translations;
 }
 
 export interface Technique extends LocalizedText {
+  title: string;
   id: string;
   category: Category;
   tags: string[];
@@ -27,15 +33,21 @@ export interface Technique extends LocalizedText {
   level?: Level;
 }
 
-export interface GeneralTask extends LocalizedText {
+export type GeneralTask = Technique;
+
+export interface Tag extends Pick<LocalizedText, 'translations' | 'text'> {
+  title: string;
   id: string;
-  category: 'general';
-  tags: string[];
   modification_date: string;
 }
 
-export interface Tag extends LocalizedText {
+export interface Examiner {
   id: string;
+  name: string;
+  email: string;
+  shortcode: string;
+  country: string;
+  details: string;
   modification_date: string;
 }
 
@@ -44,7 +56,52 @@ export interface GeneralExam {
   name: string;
   level: Level;
   techniqueIds: string[];
+  kind?: 'general' | 'random';
+  seedNumber?: number;
+  randomConfig?: Record<Level, number>;
   date?: string;
+  modification_date: string;
+}
+
+export interface Candidate {
+  id: string;
+  name: string;
+  email: string;
+  levels: Level[];
+  examinerId: string;
+  cancelled: boolean;
+}
+
+export interface ExamDefinition extends GeneralExam {
+  kind: 'general' | 'random';
+  techniqueIds: string[];
+}
+
+export interface CandidateTaskResult {
+  passed: boolean;
+  repeated: boolean;
+  note: string;
+  ratings: Ratings;
+}
+
+export interface ExaminerEvaluation {
+  tasks: Record<string, CandidateTaskResult>;
+  generalNote: string;
+  passed?: boolean;
+}
+
+export interface ExamEvent {
+  id: string;
+  location: string;
+  date: string;
+  startTime: string;
+  archived: boolean;
+  examinerIds: string[];
+  details: string;
+  createdBy: string;
+  exams: ExamDefinition[];
+  candidates: Candidate[];
+  results: Record<string, Record<string, Record<string, ExaminerEvaluation>>>;
   modification_date: string;
 }
 
@@ -53,8 +110,10 @@ export type Ratings = Partial<Record<RatingCriterion, number>>;
 
 export interface ExamData {
   techniques: Technique[];
-  generalTasks: GeneralTask[];
   tags: Tag[];
+  examiners: Examiner[];
+  /** Empty compatibility list; general tasks now live in techniques with category "general". */
+  generalTasks: GeneralTask[];
 }
 
 export interface PreparationSettings {

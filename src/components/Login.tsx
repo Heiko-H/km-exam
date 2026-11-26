@@ -4,11 +4,12 @@ import { LanguageSelect } from './LanguageSelect';
 import { useI18n } from '../i18n/I18nProvider';
 
 interface LoginProps {
-  onUnlock: (password: string) => Promise<void>;
+  onUnlock: (email: string, password: string) => Promise<void>;
 }
 
 export function Login({ onUnlock }: LoginProps) {
   const { t } = useI18n();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remaining, setRemaining] = useState(() => remainingLockoutSeconds());
   const [passwordIncorrect, setPasswordIncorrect] = useState(false);
@@ -26,7 +27,7 @@ export function Login({ onUnlock }: LoginProps) {
     setBusy(true);
     setPasswordIncorrect(false);
     try {
-      await onUnlock(password);
+      await onUnlock(email.trim(), password);
     } catch {
       const delay = recordFailedLogin();
       setRemaining(delay);
@@ -48,6 +49,19 @@ export function Login({ onUnlock }: LoginProps) {
         <h1 className="mb-2 text-2xl font-bold text-white">{t('login.title')}</h1>
         <p className="mb-6 text-slate-300">{t('login.description')}</p>
         <form className="space-y-4" onSubmit={submit}>
+          <label className="block text-sm font-medium text-slate-200" htmlFor="examiner-email">
+            {t('login.email')}
+            <input
+              autoComplete="username"
+              className="mt-2 w-full rounded-md border border-slate-600 bg-field px-3 py-3 text-base text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+              disabled={busy || remaining > 0}
+              id="examiner-email"
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              type="email"
+              value={email}
+            />
+          </label>
           <label className="block text-sm font-medium text-slate-200" htmlFor="app-password">
             {t('login.password')}
             <input
@@ -79,7 +93,7 @@ export function Login({ onUnlock }: LoginProps) {
           )}
           <button
             className="w-full rounded-md bg-primary px-4 py-3 font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={busy || remaining > 0 || !password}
+            disabled={busy || remaining > 0 || !email || !password}
             type="submit"
           >
             {busy ? t('login.checking') : t('login.signIn')}

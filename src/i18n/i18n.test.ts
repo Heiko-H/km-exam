@@ -3,8 +3,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { localize } from './localize';
 import type { TranslationLanguage, LocalizedText } from '../lib/types';
+import { messages, type MessageKey } from './messages';
 
 const translatedLanguages: TranslationLanguage[] = ['en', 'fr', 'it', 'es'];
+const eventMessageKeys: MessageKey[] = [
+  'events.involvedOnly', 'events.sortBy', 'events.categoryFilter', 'events.emptyTechniques', 'events.techniqueRange', 'events.selectedCount', 'events.applySelection',
+  'events.hour', 'events.minute', 'events.selectedTime', 'events.cancelAttendance', 'events.confirmCancelCandidate', 'events.confirmDeleteCandidate',
+  'events.confirmDeleteExam', 'events.confirmDeleteEvent', 'events.confirmTitle', 'events.confirmAction', 'events.passVotes', 'events.eventSaveRequired',
+  'events.generateRandom', 'events.addTechniques', 'events.noExams', 'events.editEvent', 'events.openEvent', 'events.examLevel',
+  'events.selectedTechniques', 'events.readOnly', 'events.isArchived',
+];
+const languageSpecificEventKeys: MessageKey[] = ['events.involvedOnly', 'events.cancelAttendance', 'events.confirmTitle', 'events.passVotes', 'events.eventSaveRequired', 'events.examLevel', 'events.readOnly', 'events.isArchived'];
 
 function readDataFile<T>(name: string): T {
   return JSON.parse(readFileSync(resolve(process.cwd(), 'data', name), 'utf8')) as T;
@@ -13,6 +22,7 @@ function readDataFile<T>(name: string): T {
 describe('localize', () => {
   it('uses the requested language, then English, then German as a fallback', () => {
     const item: LocalizedText = {
+      title: 'Deutsch',
       text: 'Deutsch',
       details: 'Deutsche Details',
       translations: {
@@ -21,21 +31,31 @@ describe('localize', () => {
       },
     };
 
-    expect(localize(item, 'fr')).toEqual({ text: 'Français', details: 'English details' });
-    expect(localize(item, 'it')).toEqual({ text: 'English', details: 'English details' });
-    expect(localize(item, 'de')).toEqual({ text: 'Deutsch', details: 'Deutsche Details' });
+    expect(localize(item, 'fr')).toMatchObject({ title: 'Français', text: 'Français', details: 'English details' });
+    expect(localize(item, 'it')).toMatchObject({ title: 'English', text: 'English', details: 'English details' });
+    expect(localize(item, 'de')).toMatchObject({ title: 'Deutsch', text: 'Deutsch', details: 'Deutsche Details' });
+  });
+
+  it('provides dedicated translations for new exam-event UI in every supported language', () => {
+    for (const language of ['fr', 'it', 'es'] as const) {
+      for (const key of eventMessageKeys) expect(messages[language][key], `${key} / ${language}`).toBeTruthy();
+      for (const key of languageSpecificEventKeys) expect(messages[language][key], `${key} / ${language}`).not.toBe(messages.en[key]);
+    }
   });
 
   it('includes translations for all exam data in English, French, Italian and Spanish', () => {
-    const techniques = readDataFile<Array<LocalizedText & { level: number }>>('techniques.json');
-    const generalTasks = readDataFile<Array<LocalizedText & { id: string }>>('general-tasks.json');
+    const techniques = readDataFile<Array<LocalizedText & { id: string }>>('techniques.json');
     const tags = readDataFile<Array<LocalizedText & { id: string }>>('tags.json');
 
-    for (const item of [...techniques, ...generalTasks, ...tags]) {
+    for (const item of [...techniques, ...tags]) {
+      expect(item.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       for (const language of translatedLanguages) {
-        expect(item.translations?.[language]?.text, `${item.text} / ${language} text`).toBeTruthy();
+        expect(item.translations?.[language]?.title, `${item.title} / ${language} title`).toBeTruthy();
         if (item.details) {
-          expect(item.translations?.[language]?.details, `${item.text} / ${language} details`).toBeTruthy();
+          expect(item.translations?.[language]?.details, `${item.title} / ${language} details`).toBeTruthy();
+        }
+        if (item.teaser) {
+          expect(item.translations?.[language]?.teaser, `${item.title} / ${language} teaser`).toBeTruthy();
         }
       }
     }

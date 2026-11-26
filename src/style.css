@@ -93,3 +93,36 @@ summary {
     background: white !important;
   }
 }
+
+.rich-text-content p,
+.rich-text-editor p {
+  margin: 0.4rem 0;
+}
+
+.rich-text-content ul,
+.rich-text-content ol,
+.rich-text-editor ul,
+.rich-text-editor ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-content ul,
+.rich-text-editor ul {
+  list-style: disc;
+}
+
+.rich-text-content ol,
+.rich-text-editor ol {
+  list-style: decimal;
+}
+
+.rich-text-content strong,
+.rich-text-editor strong {
+  font-weight: 700;
+}
+
+.rich-text-content em,
+.rich-text-editor em {
+  font-style: italic;
+}

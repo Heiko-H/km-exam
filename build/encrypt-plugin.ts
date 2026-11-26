@@ -1,4 +1,4 @@
-import { createCipheriv, pbkdf2Sync, randomBytes } from 'node:crypto';
+import { createCipheriv, createHash, pbkdf2Sync, randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
@@ -21,7 +21,9 @@ interface TechniqueInput {
   category?: string;
   tags?: string[];
   modification_date?: string;
-  text: string;
+  title?: string;
+  text?: string;
+  teaser?: string;
   details?: string;
   translations?: unknown;
 }
@@ -31,17 +33,29 @@ interface GeneralTaskInput {
   category?: string;
   tags?: string[];
   modification_date?: string;
-  text: string;
+  title?: string;
+  text?: string;
+  teaser?: string;
   details?: string;
   translations?: unknown;
 }
 
 interface TagInput {
-  id: string;
-  text: string;
-  modification_date: string;
-  details?: string;
+  id?: string;
+  title?: string;
+  text?: string;
+  modification_date?: string;
   translations?: unknown;
+}
+
+interface ExaminerInput {
+  id?: string;
+  name: string;
+  email: string;
+  shortcode: string;
+  country?: string;
+  details?: string;
+  modification_date?: string;
 }
 
 const TRANSLATION_LANGUAGES = ['en', 'fr', 'it', 'es'] as const;
@@ -69,9 +83,12 @@ function validateTranslations(item: { translations?: unknown }, label: string, w
     if (typeof translation !== 'object' || translation === null || Array.isArray(translation)) {
       throw new Error(`${label}: Übersetzung für ${language} muss ein Objekt sein.`);
     }
-    const translatedContent = translation as { text?: unknown; details?: unknown };
-    if (typeof translatedContent.text !== 'string' || translatedContent.text.trim().length === 0) {
+    const translatedContent = translation as { title?: unknown; text?: unknown; teaser?: unknown; details?: unknown };
+    if (typeof (translatedContent.title ?? translatedContent.text) !== 'string' || String(translatedContent.title ?? translatedContent.text).trim().length === 0) {
       throw new Error(`${label}: Übersetzungstext für ${language} darf nicht leer sein.`);
+    }
+    if (translatedContent.teaser !== undefined && typeof translatedContent.teaser !== 'string') {
+      throw new Error(`${label}: Übersetzungs-Teaser für ${language} muss Text sein.`);
     }
     if (translatedContent.details !== undefined && typeof translatedContent.details !== 'string') {
       throw new Error(`${label}: Übersetzungsdetails für ${language} müssen Text sein.`);
@@ -87,10 +104,6 @@ function normalizedDate(value: unknown): string {
   return '2026-11-24';
 }
 
-function slug(value: string): string {
-  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
 function inferTags(text: string): string[] {
   const normalized = text.toLocaleLowerCase('de');
   const tags = new Set<string>();
@@ -103,58 +116,72 @@ function inferTags(text: string): string[] {
   return [...tags];
 }
 
+function titleOf(item: { title?: string; text?: string }): string {
+  return (item.title ?? item.text ?? '').trim();
+}
+
+function uuidFor(value: string): string {
+  const hex = createHash('sha256').update(value).digest('hex').slice(0, 32).split('');
+  hex[12] = '5';
+  hex[16] = ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
+  const raw = hex.join('');
+  return `${raw.slice(0, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}-${raw.slice(16, 20)}-${raw.slice(20)}`;
+}
+
 function validateData(techniques: unknown, generalTasks: unknown, tags: unknown): string[] {
   const warnings: string[] = [];
-  if (!Array.isArray(techniques) || techniques.length === 0) {
+  if (!Array.isArray(techniques) || techniques.length + (Array.isArray(generalTasks) ? generalTasks.length : 0) === 0) {
     throw new Error('data/techniques.json muss mindestens eine Technik enthalten.');
   }
-  const seenTexts = new Set<string>();
+  const seenIds = new Set<string>();
+  const seenTitles = new Set<string>();
   for (const [index, item] of techniques.entries()) {
     const technique = item as TechniqueInput;
     const level = technique?.level ?? Number(technique?.category?.replace('level-', ''));
-    if (!Number.isInteger(level) || level < 1 || level > 5) {
-      throw new Error(`Technik ${index + 1}: level muss eine ganze Zahl von 1 bis 5 sein.`);
+    const category = technique.category ?? `level-${level}`;
+    if (category !== 'general' && category !== 'other' && (!Number.isInteger(level) || level < 1 || level > 5)) {
+      throw new Error(`Technik ${index + 1}: category muss Stufe 1–5, Allgemein oder Sonstige sein.`);
     }
-    if (typeof technique.text !== 'string' || technique.text.trim().length === 0) {
-      throw new Error(`Technik ${index + 1}: text darf nicht leer sein.`);
+    const title = titleOf(technique);
+    if (!title) {
+      throw new Error(`Technik ${index + 1}: title darf nicht leer sein.`);
     }
     if (technique.details !== undefined && typeof technique.details !== 'string') {
       throw new Error(`Technik ${index + 1}: details muss Text sein.`);
     }
+    if (technique.teaser !== undefined && typeof technique.teaser !== 'string') throw new Error(`Technik ${index + 1}: teaser muss Text sein.`);
     validateTranslations(technique, `Technik ${index + 1}`, warnings, technique.details !== undefined);
-    const normalizedText = technique.text.trim().toLocaleLowerCase('de');
-    if (seenTexts.has(normalizedText)) {
-      throw new Error(`Die Technik „${technique.text}“ ist mehrfach vorhanden.`);
-    }
-    seenTexts.add(normalizedText);
+    const normalizedTitle = title.toLocaleLowerCase('de');
+    if (seenTitles.has(normalizedTitle)) throw new Error(`Die Technik „${title}“ ist mehrfach vorhanden.`);
+    seenTitles.add(normalizedTitle);
+    const id = technique.id ?? uuidFor(`technique:${category}:${title}`);
+    if (seenIds.has(id)) throw new Error(`Technik ${index + 1}: id ist doppelt.`);
+    seenIds.add(id);
   }
 
   if (!Array.isArray(generalTasks)) {
     throw new Error('data/general-tasks.json muss eine Liste enthalten.');
   }
-  const seenIds = new Set<string>();
   for (const [index, item] of generalTasks.entries()) {
     const task = item as GeneralTaskInput;
-    if (typeof task?.id !== 'string' || task.id.trim().length === 0 || seenIds.has(task.id)) {
-      throw new Error(`Allgemeine Aufgabe ${index + 1}: id fehlt oder ist doppelt.`);
-    }
-    if (typeof task.text !== 'string' || task.text.trim().length === 0) {
-      throw new Error(`Allgemeine Aufgabe ${index + 1}: text darf nicht leer sein.`);
-    }
+    if (!titleOf(task)) throw new Error(`Allgemeine Aufgabe ${index + 1}: title darf nicht leer sein.`);
     if (task.details !== undefined && typeof task.details !== 'string') {
       throw new Error(`Allgemeine Aufgabe ${index + 1}: details muss Text sein.`);
     }
     validateTranslations(task, `Allgemeine Aufgabe ${index + 1}`, warnings, task.details !== undefined);
-    seenIds.add(task.id);
+    const id = task.id ?? uuidFor(`general:${titleOf(task)}`);
+    if (seenIds.has(id)) throw new Error(`Allgemeine Aufgabe ${index + 1}: id ist doppelt.`);
+    seenIds.add(id);
   }
   if (!Array.isArray(tags)) throw new Error('data/tags.json muss eine Liste enthalten.');
   const tagIds = new Set<string>();
   for (const [index, item] of tags.entries()) {
     const tag = item as TagInput;
-    if (!tag?.id || !tag.text?.trim() || tagIds.has(tag.id)) throw new Error(`Tag ${index + 1}: id oder Titel fehlt bzw. id ist doppelt.`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(tag.modification_date)) throw new Error(`Tag ${tag.id}: modification_date muss YYYY-MM-DD sein.`);
+    if (!titleOf(tag)) throw new Error(`Tag ${index + 1}: Titel fehlt.`);
     validateTranslations(tag, `Tag ${tag.id}`, warnings, false);
-    tagIds.add(tag.id);
+    const id = tag.id ?? uuidFor(`tag:${titleOf(tag)}`);
+    if (tagIds.has(id)) throw new Error(`Tag ${index + 1}: id ist doppelt.`);
+    tagIds.add(id);
   }
   return warnings;
 }
@@ -164,35 +191,82 @@ export function encryptAppData(
   techniques: unknown,
   generalTasks: unknown,
   tags: unknown = [],
+  examiners: unknown = [],
 ): EncryptedPayload {
   if (!password || password.trim().length < 12) {
     throw new Error('APP_PASSWORD muss gesetzt sein und mindestens 12 Zeichen enthalten.');
   }
   validateData(techniques, generalTasks, tags);
 
-  const canonicalTechniques = (techniques as TechniqueInput[]).map((technique) => {
-    const level = (technique.level ?? Number(technique.category?.replace('level-', ''))) as 1 | 2 | 3 | 4 | 5;
+  const canonicalize = (item: TechniqueInput | GeneralTaskInput, defaultCategory: string) => {
+    const title = titleOf(item);
+    const category = item.category ?? defaultCategory;
+    const level = category.startsWith('level-') ? Number(category.slice(-1)) : undefined;
+    const translations = item.translations && typeof item.translations === 'object'
+      ? Object.fromEntries(Object.entries(item.translations).map(([language, content]) => {
+        const translated = content as { title?: string; text?: string; teaser?: string; details?: string };
+        const translatedTitle = translated.title ?? translated.text ?? '';
+        return [language, { ...translated, title: translatedTitle, text: translatedTitle }];
+      }))
+      : undefined;
     return {
-      ...technique,
-      id: technique.id || `technique-${level}-${slug(technique.text)}`,
+      ...item,
+      id: item.id ?? uuidFor(`${defaultCategory}:${title}`),
+      title,
+      text: title,
+      teaser: item.teaser ?? '',
+      category,
       level,
-      category: `level-${level}`,
-      tags: technique.tags ?? inferTags(technique.text),
-      modification_date: normalizedDate(technique.modification_date),
+      tags: item.tags ?? (category.startsWith('level-') ? inferTags(title) : []),
+      modification_date: normalizedDate(item.modification_date),
+      translations,
     };
+  };
+  const canonicalTechniques = [
+    ...(techniques as TechniqueInput[]).map((item) => canonicalize(item, `level-${item.level ?? 1}`)),
+    ...(generalTasks as GeneralTaskInput[]).map((item) => canonicalize(item, 'general')),
+  ];
+  const canonicalTags = (tags as TagInput[]).map((tag) => {
+    const title = titleOf(tag);
+    const translations = tag.translations && typeof tag.translations === 'object'
+      ? Object.fromEntries(Object.entries(tag.translations).map(([language, content]) => {
+        const translated = content as { title?: string; text?: string };
+        const translatedTitle = translated.title ?? translated.text ?? '';
+        return [language, { title: translatedTitle, text: translatedTitle }];
+      }))
+      : undefined;
+    return { id: tag.id ?? uuidFor(`tag:${title}`), title, text: title, translations, modification_date: normalizedDate(tag.modification_date) };
   });
-  const canonicalGeneralTasks = (generalTasks as GeneralTaskInput[]).map((task) => ({
-    ...task,
-    category: 'general' as const,
-    tags: task.tags ?? [],
-    modification_date: normalizedDate(task.modification_date),
+  const tagIds = new Map<string, string>();
+  (tags as TagInput[]).forEach((tag, index) => {
+    const canonical = canonicalTags[index];
+    if (tag.id) tagIds.set(tag.id, canonical.id);
+    tagIds.set(titleOf(tag), canonical.id);
+  });
+  for (const technique of canonicalTechniques) {
+    technique.tags = technique.tags.map((id) => tagIds.get(id) ?? id);
+  }
+  const defaultExaminers: ExaminerInput[] = [
+    { name: 'Peter', email: 'peter@gmail.com', shortcode: 'PE' },
+    { name: 'Heiko', email: 'heiko@gmail.com', shortcode: 'HE' },
+    { name: 'Kai', email: 'kai@gmail.com', shortcode: 'KA' },
+  ];
+  const canonicalExaminers = (Array.isArray(examiners) && examiners.length ? examiners as ExaminerInput[] : defaultExaminers).map((examiner) => ({
+    ...examiner,
+    id: examiner.id ?? uuidFor(`examiner:${examiner.email.toLocaleLowerCase()}`),
+    country: examiner.country ?? 'DE',
+    details: examiner.details ?? '',
+    modification_date: normalizedDate(examiner.modification_date),
   }));
+  if (new Set(canonicalExaminers.map((item) => item.email.toLowerCase())).size !== canonicalExaminers.length || new Set(canonicalExaminers.map((item) => item.shortcode.toLowerCase())).size !== canonicalExaminers.length) {
+    throw new Error('Prüfer-E-Mail und Kürzel müssen eindeutig sein.');
+  }
 
   const salt = randomBytes(16);
   const iv = randomBytes(12);
   const key = pbkdf2Sync(password, salt, ITERATIONS, KEY_LENGTH, 'sha256');
   const cipher = createCipheriv('aes-256-gcm', key, iv);
-  const plaintext = Buffer.from(JSON.stringify({ techniques: canonicalTechniques, generalTasks: canonicalGeneralTasks, tags }), 'utf8');
+  const plaintext = Buffer.from(JSON.stringify({ techniques: canonicalTechniques, generalTasks: [], tags: canonicalTags, examiners: canonicalExaminers }), 'utf8');
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const authenticatedData = Buffer.concat([ciphertext, cipher.getAuthTag()]);
 
@@ -219,10 +293,21 @@ export function encryptedDataPlugin(password: string | undefined, dataDirectory:
       }
       try {
         const techniques = JSON.parse(readFileSync(resolve(dataDirectory, 'techniques.json'), 'utf8')) as unknown;
-        const generalTasks = JSON.parse(readFileSync(resolve(dataDirectory, 'general-tasks.json'), 'utf8')) as unknown;
+        let generalTasks: unknown = [];
+        try {
+          generalTasks = JSON.parse(readFileSync(resolve(dataDirectory, 'general-tasks.json'), 'utf8')) as unknown;
+        } catch {
+          generalTasks = [];
+        }
         const tags = JSON.parse(readFileSync(resolve(dataDirectory, 'tags.json'), 'utf8')) as unknown;
+        let examiners: unknown = [];
+        try {
+          examiners = JSON.parse(readFileSync(resolve(dataDirectory, 'examiners.json'), 'utf8')) as unknown;
+        } catch {
+          examiners = [];
+        }
         for (const warning of validateData(techniques, generalTasks, tags)) this.warn(warning);
-        encryptedPayload = encryptAppData(password, techniques, generalTasks, tags);
+        encryptedPayload = encryptAppData(password, techniques, generalTasks, tags, examiners);
       } catch (error) {
         this.error(error instanceof Error ? error.message : 'Die Prüfungsdaten konnten nicht verschlüsselt werden.');
       }

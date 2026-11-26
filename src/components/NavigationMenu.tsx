@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import { LanguageSelect } from './LanguageSelect';
 
-export type AppRoute = 'home' | 'random' | 'general' | 'techniques' | 'training' | 'refresh-data';
+export type AppRoute = 'home' | 'exams' | 'techniques' | 'training' | 'refresh-data' | 'profile' | 'random' | 'general';
 
 interface NavigationMenuProps {
   activeRoute: AppRoute;
   onNavigate: (route: AppRoute) => void;
   onLock: () => void;
+  examinerShortcode?: string;
 }
 
-export function NavigationMenu({ activeRoute, onNavigate, onLock }: NavigationMenuProps) {
+export function NavigationMenu({ activeRoute, onNavigate, onLock, examinerShortcode }: NavigationMenuProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
@@ -47,15 +48,19 @@ export function NavigationMenu({ activeRoute, onNavigate, onLock }: NavigationMe
             </header>
             <nav className="flex-1 space-y-1">
               <MenuButton active={activeRoute === 'home'} label={t('nav.home')} onClick={() => navigate('home')} />
-              <MenuButton active={activeRoute === 'general'} label={t('nav.general')} onClick={() => navigate('general')} />
-              <MenuButton active={activeRoute === 'random'} label={t('nav.random')} onClick={() => navigate('random')} />
+              <MenuButton active={activeRoute === 'exams'} label={t('nav.exams')} onClick={() => navigate('exams')} />
               <MenuButton active={activeRoute === 'techniques'} label={t('nav.techniques')} onClick={() => navigate('techniques')} />
               <MenuButton active={activeRoute === 'training'} label={t('nav.training')} onClick={() => navigate('training')} />
               <MenuButton active={activeRoute === 'refresh-data'} label={t('nav.refreshData')} onClick={() => navigate('refresh-data')} />
             </nav>
-            <button className="mt-5 min-h-11 rounded-md border border-slate-600 px-3 text-left font-medium text-slate-200 hover:bg-slate-700" onClick={() => { setOpen(false); onLock(); }} type="button">
-              {t('nav.lock')}
-            </button>
+            <div className="mt-5 grid grid-cols-2 gap-2 border-t border-slate-700 pt-4">
+              <button className="min-h-11 rounded-md border border-slate-600 px-3 text-left font-medium text-slate-200 hover:bg-slate-700" onClick={() => navigate('profile')} type="button">
+                <span className="mr-2 inline-flex rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">{examinerShortcode ?? '—'}</span>{t('nav.profile')}
+              </button>
+              <button className="min-h-11 rounded-md border border-slate-600 px-3 text-left font-medium text-slate-200 hover:bg-slate-700" onClick={() => { setOpen(false); onLock(); }} type="button">
+                {t('nav.lock')}
+              </button>
+            </div>
           </aside>
         </div>
       )}

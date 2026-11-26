@@ -46,10 +46,10 @@ export async function decryptWithKey(key: CryptoKey, payload: EncryptedPayload):
     decodeBase64(payload.data),
   );
   const parsed = JSON.parse(new TextDecoder().decode(decrypted)) as Partial<ExamData>;
-  if (!Array.isArray(parsed.techniques) || !Array.isArray(parsed.generalTasks)) {
+  if (!Array.isArray(parsed.techniques) || !Array.isArray(parsed.tags) || !Array.isArray(parsed.examiners)) {
     throw new Error('Die entschlüsselten Prüfungsdaten haben ein ungültiges Format.');
   }
-  return { ...parsed, tags: Array.isArray(parsed.tags) ? parsed.tags : [] } as ExamData;
+  return { ...parsed, generalTasks: [] } as ExamData;
 }
 
 export async function unlockData(password: string, payload: EncryptedPayload): Promise<{ data: ExamData; key: CryptoKey }> {

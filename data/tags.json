@@ -1,8 +1,8 @@
 [
-  { "id": "pistol", "text": "Pistole", "modification_date": "2026-11-24", "translations": { "en": { "text": "Pistol" }, "fr": { "text": "Pistolet" }, "it": { "text": "Pistola" }, "es": { "text": "Pistola" } } },
-  { "id": "knife", "text": "Messer", "modification_date": "2026-11-24", "translations": { "en": { "text": "Knife" }, "fr": { "text": "Couteau" }, "it": { "text": "Coltello" }, "es": { "text": "Cuchillo" } } },
-  { "id": "baton", "text": "Baton", "modification_date": "2026-11-24", "translations": { "en": { "text": "Baton" }, "fr": { "text": "Bâton" }, "it": { "text": "Bastone" }, "es": { "text": "Bastón" } } },
-  { "id": "strike", "text": "Schlag", "modification_date": "2026-11-24", "translations": { "en": { "text": "Strike" }, "fr": { "text": "Coup" }, "it": { "text": "Colpo" }, "es": { "text": "Golpe" } } },
-  { "id": "kick", "text": "Tritt", "modification_date": "2026-11-24", "translations": { "en": { "text": "Kick" }, "fr": { "text": "Coup de pied" }, "it": { "text": "Calcio" }, "es": { "text": "Patada" } } },
-  { "id": "ground", "text": "Boden", "modification_date": "2026-11-24", "translations": { "en": { "text": "Ground" }, "fr": { "text": "Sol" }, "it": { "text": "Terre" }, "es": { "text": "Suelo" } } }
+  {"id":"bca3d2ea-be6b-4ba5-a7b6-384f546cdd4d","title":"Pistole","modification_date":"2026-11-26","translations":{"en":{"title":"Pistol"},"fr":{"title":"Pistolet"},"it":{"title":"Pistola"},"es":{"title":"Pistola"}}},
+  {"id":"240834ed-11f5-4b92-8247-ff9fd0319977","title":"Messer","modification_date":"2026-11-26","translations":{"en":{"title":"Knife"},"fr":{"title":"Couteau"},"it":{"title":"Coltello"},"es":{"title":"Cuchillo"}}},
+  {"id":"188eb846-66bd-47ad-8965-56a6b79545fb","title":"Baton","modification_date":"2026-11-26","translations":{"en":{"title":"Baton"},"fr":{"title":"Bâton"},"it":{"title":"Bastone"},"es":{"title":"Bastón"}}},
+  {"id":"bb69ee1c-c500-42ae-b067-500b88267041","title":"Schlag","modification_date":"2026-11-26","translations":{"en":{"title":"Strike"},"fr":{"title":"Coup"},"it":{"title":"Colpo"},"es":{"title":"Golpe"}}},
+  {"id":"4579afcd-ab81-464e-8ae6-9db581c94032","title":"Tritt","modification_date":"2026-11-26","translations":{"en":{"title":"Kick"},"fr":{"title":"Coup de pied"},"it":{"title":"Calcio"},"es":{"title":"Patada"}}},
+  {"id":"2cf69eaa-5b97-4ad5-9ec2-9ffe58c9e7f4","title":"Boden","modification_date":"2026-11-26","translations":{"en":{"title":"Ground"},"fr":{"title":"Sol"},"it":{"title":"Terre"},"es":{"title":"Suelo"}}}
 ]

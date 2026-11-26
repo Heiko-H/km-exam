@@ -11,6 +11,10 @@
     "migration:sql": "node build/generate-sql-migration.mjs"
   },
   "dependencies": {
+    "@tiptap/extension-text-style": "latest",
+    "@tiptap/pm": "latest",
+    "@tiptap/react": "latest",
+    "@tiptap/starter-kit": "latest",
     "@tailwindcss/vite": "latest",
     "@vitejs/plugin-react": "latest",
     "react": "latest",
@@ -18,7 +22,8 @@
     "tailwindcss": "latest",
     "vite": "latest",
     "vite-plugin-pwa": "latest",
-    "workbox-window": "^7.4.1"
+    "workbox-window": "^7.4.1",
+    "dompurify": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",

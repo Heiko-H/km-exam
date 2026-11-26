@@ -14,6 +14,13 @@ export interface SeedInputs {
   date: string;
 }
 
+export interface EventSeedInputs {
+  location: string;
+  date: string;
+  level: Level;
+  sequence: number;
+}
+
 export function createSeedString(inputs: SeedInputs): string {
   return [inputs.firstName.trim(), inputs.lastName.trim(), inputs.level, inputs.candidateCount, inputs.date].join('|');
 }
@@ -45,7 +52,24 @@ export async function selectTechniques(
   counts: Record<Level, number>,
   inputs: SeedInputs,
 ): Promise<Technique[]> {
-  const seed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(createSeedString(inputs)));
+  return selectTechniquesFromSeed(techniques, counts, createSeedString(inputs));
+}
+
+export async function selectExamTechniques(
+  techniques: readonly Technique[],
+  counts: Record<Level, number>,
+  inputs: EventSeedInputs,
+): Promise<Technique[]> {
+  const seed = [inputs.location.trim(), inputs.date, inputs.level, inputs.sequence].join('|');
+  return selectTechniquesFromSeed(techniques, counts, seed);
+}
+
+async function selectTechniquesFromSeed(
+  techniques: readonly Technique[],
+  counts: Record<Level, number>,
+  seedText: string,
+): Promise<Technique[]> {
+  const seed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(seedText));
   const seedView = new DataView(seed);
   const words = new Uint32Array(4);
   for (let index = 0; index < words.length; index += 1) {
