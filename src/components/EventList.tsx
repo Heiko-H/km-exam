@@ -91,7 +91,7 @@ export function EventList({ events, examiners, activeExaminerId, onNavigate, onL
           </label>
         </div>
         <div className="space-y-3">
-          <label className="text-sm text-slate-300">{t('events.search')}
+          <label className="block text-sm text-slate-300">{t('events.search')}
             <input className="mt-1.5 min-h-11 w-full rounded-md border border-slate-600 bg-field px-3 text-white" onChange={(event) => setQuery(event.target.value)} value={query} />
           </label>
           <fieldset>
