@@ -107,7 +107,7 @@ export function TechniqueManager({ items, tags, activeRoute, onNavigate, onLock,
   return (
     <>
       <PageHeader activeRoute={activeRoute} onLock={onLock} onNavigate={onNavigate} title={t('tech.title')} />
-      <main className="mx-auto max-w-5xl space-y-5 px-3 py-5 sm:px-6 sm:py-8">
+      <main className="app-container space-y-5 py-5 sm:py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-lg border border-slate-700 bg-panel p-1" role="tablist">
             <button aria-selected={tab === 'techniques'} className={`rounded-md px-4 py-2 text-sm font-medium ${tab === 'techniques' ? 'bg-primary text-white' : 'text-slate-300'}`} onClick={() => changeTab('techniques')} role="tab" type="button">{t('tech.tabTechniques')}</button>

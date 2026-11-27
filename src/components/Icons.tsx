@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type IconName = 'plus' | 'edit' | 'delete' | 'upload' | 'download' | 'play' | 'up' | 'down' | 'left' | 'right' | 'calendar' | 'check' | 'close' | 'repeat' | 'print' | 'save' | 'drag';
+export type IconName = 'plus' | 'edit' | 'delete' | 'upload' | 'download' | 'play' | 'up' | 'down' | 'left' | 'right' | 'calendar' | 'check' | 'close' | 'repeat' | 'print' | 'save' | 'drag' | 'mail' | 'eye' | 'user' | 'send';
 
 const paths: Record<IconName, ReactNode> = {
   plus: <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />,
@@ -20,6 +20,10 @@ const paths: Record<IconName, ReactNode> = {
   print: <><path strokeLinecap="round" strokeLinejoin="round" d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 14h12v7H6z" /></>,
   save: <path strokeLinecap="round" strokeLinejoin="round" d="M5 3h12l4 4v14H3V3h2Zm2 0v6h10V3M7 21v-8h10v8" />,
   drag: <><circle cx="9" cy="5" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="5" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="19" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="19" r="1" fill="currentColor" stroke="none" /></>,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" /><path strokeLinecap="round" strokeLinejoin="round" d="m4 7 8 6 8-6" /></>,
+  eye: <><path strokeLinecap="round" strokeLinejoin="round" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>,
+  user: <><circle cx="12" cy="8" r="4" /><path strokeLinecap="round" strokeLinejoin="round" d="M4 21a8 8 0 0 1 16 0" /></>,
+  send: <path strokeLinecap="round" strokeLinejoin="round" d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13" />,
 };
 
 export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {

@@ -11,19 +11,20 @@
     "migration:sql": "node build/generate-sql-migration.mjs"
   },
   "dependencies": {
+    "@tailwindcss/vite": "latest",
     "@tiptap/extension-text-style": "latest",
     "@tiptap/pm": "latest",
     "@tiptap/react": "latest",
     "@tiptap/starter-kit": "latest",
-    "@tailwindcss/vite": "latest",
     "@vitejs/plugin-react": "latest",
+    "dompurify": "latest",
+    "i18n-iso-countries": "^7.14.0",
     "react": "latest",
     "react-dom": "latest",
     "tailwindcss": "latest",
     "vite": "latest",
     "vite-plugin-pwa": "latest",
-    "workbox-window": "^7.4.1",
-    "dompurify": "latest"
+    "workbox-window": "^7.4.1"
   },
   "devDependencies": {
     "@types/node": "latest",

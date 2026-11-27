@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Candidate, ExamDefinition, ExamEvent, Examiner, Level, Technique } from '../lib/types';
 import { localDateString, selectExamTechniques } from '../lib/random';
+import { candidateExaminerIds } from '../lib/eventModel';
 import { PageHeader } from './PageHeader';
 import type { AppRoute } from './NavigationMenu';
 import { useI18n } from '../i18n/I18nProvider';
@@ -63,14 +64,14 @@ export function EventEditor({ event: initialEvent, isNew, examiners, techniques,
     setCandidateName(candidate.name);
     setCandidateEmail(candidate.email);
     setCandidateLevels(candidate.levels);
-    setCandidateExaminer(candidate.examinerId);
+    setCandidateExaminer(candidateExaminerIds(candidate)[0] ?? activeExaminerId);
   }
 
   function saveCandidate() {
     if (!candidateName.trim() || candidateLevels.length === 0) return;
     const updated: Candidate = {
       id: editingCandidateId ?? crypto.randomUUID(), name: candidateName.trim(), email: candidateEmail.trim(),
-      levels: [...candidateLevels].sort((a, b) => a - b), examinerId: candidateExaminer, cancelled: event.candidates.find((item) => item.id === editingCandidateId)?.cancelled ?? false,
+      levels: [...candidateLevels].sort((a, b) => a - b), examinerIds: [candidateExaminer], cancelled: event.candidates.find((item) => item.id === editingCandidateId)?.cancelled ?? false,
     };
     update({ candidates: editingCandidateId ? event.candidates.map((item) => item.id === editingCandidateId ? updated : item) : [...event.candidates, updated] });
     resetCandidate();
@@ -128,7 +129,7 @@ export function EventEditor({ event: initialEvent, isNew, examiners, techniques,
   return (
     <>
       <PageHeader activeRoute="exams" examinerShortcode={examiners.find((item) => item.id === activeExaminerId)?.shortcode} onLock={onLock} onNavigate={onNavigate} title={isNew ? t('events.new') : t('events.edit')} />
-      <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
+      <main className="app-container py-5 sm:py-8">
         <form className="space-y-6" onSubmit={submit}>
           <section className="rounded-xl border border-slate-700 bg-panel p-4 sm:p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">{t('events.eventDetails')}</h2>
@@ -151,7 +152,7 @@ export function EventEditor({ event: initialEvent, isNew, examiners, techniques,
               {candidates.map((candidate) => <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-700 p-3" key={candidate.id}>
                 <span className="min-w-32 flex-1 font-medium text-white">{candidate.name}</span><span className="text-xs text-slate-400">{candidate.email || '—'}</span>
                 <span className="flex flex-wrap gap-1">{candidate.levels.map((item) => <span className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary" key={item}>{item}</span>)}</span>
-                <span className="rounded-full border border-slate-600 px-2 py-1 text-xs text-slate-300" title={examiners.find((item) => item.id === candidate.examinerId)?.name}>{examiners.find((item) => item.id === candidate.examinerId)?.shortcode ?? '—'}</span>
+                <span className="flex flex-wrap gap-1">{candidateExaminerIds(candidate).map((id) => { const examiner = examiners.find((item) => item.id === id); return examiner && <span className="rounded-full border border-slate-600 px-2 py-1 text-xs text-slate-300" key={id} title={examiner.name}>{examiner.shortcode}</span>; })}</span>
                 <button className="rounded px-2 py-1 text-sm text-slate-300 hover:bg-slate-700" onClick={() => update({ candidates: event.candidates.map((item) => item.id === candidate.id ? { ...item, cancelled: !item.cancelled } : item) })} type="button">{candidate.cancelled ? t('events.uncancel') : t('events.cancelled')}</button>
                 <button aria-label={t('events.editCandidate')} className="rounded px-2 py-1 text-primary hover:bg-slate-700" onClick={() => beginEditCandidate(candidate)} type="button">✎</button>
                 <button aria-label={t('events.deleteCandidate')} className="rounded px-2 py-1 text-red-300 hover:bg-slate-700" onClick={() => update({ candidates: event.candidates.filter((item) => item.id !== candidate.id) })} type="button">×</button>

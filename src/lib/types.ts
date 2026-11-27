@@ -68,7 +68,8 @@ export interface Candidate {
   name: string;
   email: string;
   levels: Level[];
-  examinerId: string;
+  examinerIds: string[];
+  examinerId?: string;
   cancelled: boolean;
 }
 

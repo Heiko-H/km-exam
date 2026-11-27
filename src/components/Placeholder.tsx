@@ -9,7 +9,7 @@ export function Placeholder({ route, onNavigate, onLock }: { route: AppRoute; on
   return (
     <>
       <PageHeader activeRoute={route} onLock={onLock} onNavigate={onNavigate} title={title} />
-      <main className="mx-auto max-w-5xl px-3 py-8 sm:px-6 sm:py-12">
+      <main className="app-container py-8 sm:py-12">
         <p className="rounded-xl border border-slate-700 bg-panel p-6 text-slate-300">{t('placeholder.title')}</p>
       </main>
     </>

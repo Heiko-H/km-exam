@@ -12,7 +12,7 @@ export function PageHeader({ title, activeRoute, onNavigate, onLock, examinerSho
 }) {
   return (
     <header className="border-b border-slate-700 bg-app/95 shadow-sm">
-      <div className="mx-auto flex min-h-16 max-w-5xl items-center gap-3 px-3 py-2 sm:px-6">
+      <div className="app-container flex min-h-16 items-center gap-3 py-2">
         <NavigationMenu activeRoute={activeRoute} examinerShortcode={examinerShortcode} onLock={onLock} onNavigate={onNavigate} />
         <h1 className="min-w-0 flex-1 truncate text-lg font-bold text-white">{title}</h1>
         {actions}

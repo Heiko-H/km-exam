@@ -29,7 +29,7 @@ Die Anmeldung erfolgt mit der E-Mail eines Prüfers und dem gemeinsamen App-Pass
 - **Technik:** `id`, `category`, `tags` (Tag-UUIDs), `modification_date`, `title`, `teaser` (Kurzbeschreibung, max. 200 Zeichen), `details` (HTML aus dem WYSIWYG-Editor Tiptap; wird vor der Anzeige mit DOMPurify bereinigt), `translations`.
 - **Tag:** `id`, `title`, `modification_date`, `translations`. Ein Tag kann vielen Techniken zugeordnet sein und umgekehrt.
 - **Prüfer:** `id`, `name`, `email`, `shortcode` (eindeutig, wird überall als Kürzel-Tag angezeigt; der Name erscheint als Tooltip), `country`, `details`.
-- **Prüfungscontainer** (Menüpunkt „Prüfung“): Ort, Datum, Beginn, Archiviert, verknüpfte Prüfer, Details, enthaltene Prüfungen (eigene Reihenfolge oder Zufallsauswahl) und Prüflinge (Name, E-Mail, Stufen, Prüfer-Kürzel, abgesagt). Prüfungen und Prüflinge gehören immer genau zu einem Container. Bearbeiten dürfen Ersteller und verknüpfte Prüfer, löschen nur der Ersteller. Die Übersicht ist nach Datum und danach nach Ort sortiert; archivierte Container erscheinen nur mit dem Filter „Archiviert“.
+- **Prüfungscontainer** (Menüpunkt „Prüfung“): Ort, Datum, Beginn, Archiviert, verknüpfte Prüfer, Details, enthaltene Prüfungen (eigene Reihenfolge oder initiale Zufallsauswahl) und Prüflinge (Name, E-Mail, Stufen, Prüfer-Kürzel, abgesagt). Nach dem Anlegen lassen sich alle Prüfungen unabhängig von ihrer Entstehungsart über „Techniken hinzufügen“ bearbeiten. Prüfungen und Prüflinge gehören immer genau zu einem Container. Bearbeiten dürfen Ersteller und verknüpfte Prüfer, löschen nur der Ersteller. Die Übersicht ist nach Datum und danach nach Ort sortiert; archivierte Container erscheinen nur mit dem Filter „Archiviert“.
 - **Bewertungen** werden pro Prüfung, Prüfling und Prüfer getrennt gespeichert (Bestanden, Wiederholt, T/R/K/S, Notizen, allgemeine Prüfernotiz und Gesamtentscheidung je Stufe). Beim Durchführen werden nur nicht abgesagte Prüflinge der passenden Stufe angeboten.
 - **Lokale Speicherung:** Der Browser hat keine eingebaute SQLite-Datenbank (nur `localStorage`/IndexedDB; SQLite ginge nur per WebAssembly). Prüfungscontainer inklusive Bewertungen sowie lokal bearbeitete Techniken, Tags und Profile liegen in `localStorage` und sind dort mit dem aus dem Passwort abgeleiteten Schlüssel (AES-GCM) verschlüsselt. Beim Laden gewinnt pro `id` der Eintrag mit dem neueren `modification_date`. Nach einem Passwortwechsel sind lokal gespeicherte Daten nicht mehr lesbar; dann gelten wieder die Daten aus dem Bundle.
 - **Kein Austausch zwischen Geräten:** Ohne Server sieht jedes Gerät nur seine eigenen Container und Bewertungen. Das Datenmodell ist bereits für mehrere Prüfer ausgelegt.
@@ -44,6 +44,12 @@ Eine reine Frontend-App kann kein echtes Zugriffsgeheimnis gegenüber Personen s
 ## Zufall und Persistenz
 
 Eine Zufallsprüfung nutzt SHA-256 über `Ort|Datum|Stufe|laufende Nummer der Prüfung im Container` und Fisher-Yates zuerst innerhalb jeder Stufe und danach über alle ausgewählten Techniken. Die Liste wird einmalig beim Anlegen erzeugt und gespeichert; danach lässt sie sich wie eine eigene Prüfung bearbeiten. Alle Bewertungen werden sofort verschlüsselt im `localStorage` gespeichert; eine beendete Prüfung kann jederzeit erneut geöffnet werden.
+
+## Bedienung und Druck
+
+- Die Termin-Uhrzeit wird mit einem nativen Timepicker ausgewählt, nie mit Stunden- oder Minuten-Buttons. Zulässig sind Zeiten von 08:00 bis 20:00 Uhr in 15-Minuten-Schritten.
+- Druckausgaben verwenden keine Hintergrundfarben oder Schatten. Der Druckhintergrund bleibt transparent, damit keine Druckerfarbe verschwendet wird.
+- Inhaltsseiten verwenden den gemeinsamen Container `app-container` mit 100 % Breite, maximal 64 rem und zentral definierten Breakpoints: 0,75 rem Seitenabstand, ab 40 rem 1,5 rem und ab 64 rem 2 rem. Neue Seiten müssen dieselbe Klasse nutzen, damit alle Container gleich breit ausgerichtet bleiben.
 
 ## GitHub Pages
 

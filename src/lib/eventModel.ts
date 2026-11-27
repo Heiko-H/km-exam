@@ -19,6 +19,29 @@ export function candidatesForExam(event: ExamEvent, exam: ExamDefinition): Candi
   return event.candidates.filter((candidate) => !candidate.cancelled && candidate.levels.includes(exam.level));
 }
 
+export function candidateExaminerIds(candidate: Pick<Candidate, 'examinerId'> & Partial<Pick<Candidate, 'examinerIds'>>): string[] {
+  const examinerIds = candidate.examinerIds?.length ? candidate.examinerIds : candidate.examinerId ? [candidate.examinerId] : [];
+  return [...new Set(examinerIds.filter((id): id is string => typeof id === 'string' && id.length > 0))];
+}
+
+export function candidateOutcome(event: ExamEvent, candidate: Candidate): 'passed' | 'failed' | undefined {
+  const examinerIds = candidateExaminerIds(candidate);
+  let passedVotes = 0;
+  let failedVotes = 0;
+
+  for (const exam of event.exams) {
+    if (!candidate.levels.includes(exam.level)) continue;
+    for (const examinerId of examinerIds) {
+      const passed = event.results[exam.id]?.[candidate.id]?.[examinerId]?.passed;
+      if (passed === true) passedVotes += 1;
+      else if (passed === false) failedVotes += 1;
+    }
+  }
+
+  if (passedVotes + failedVotes === 0) return undefined;
+  return passedVotes > failedVotes ? 'passed' : 'failed';
+}
+
 export function sortEvents(events: readonly ExamEvent[]): ExamEvent[] {
   return [...events].sort((a, b) => a.date.localeCompare(b.date) || a.location.localeCompare(b.location, undefined, { sensitivity: 'base' }));
 }

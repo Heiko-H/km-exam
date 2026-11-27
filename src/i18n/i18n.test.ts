@@ -8,12 +8,13 @@ import { messages, type MessageKey } from './messages';
 const translatedLanguages: TranslationLanguage[] = ['en', 'fr', 'it', 'es'];
 const eventMessageKeys: MessageKey[] = [
   'events.involvedOnly', 'events.sortBy', 'events.categoryFilter', 'events.emptyTechniques', 'events.techniqueRange', 'events.selectedCount', 'events.applySelection',
-  'events.hour', 'events.minute', 'events.selectedTime', 'events.cancelAttendance', 'events.confirmCancelCandidate', 'events.confirmDeleteCandidate',
-  'events.confirmDeleteExam', 'events.confirmDeleteEvent', 'events.confirmTitle', 'events.confirmAction', 'events.passVotes', 'events.eventSaveRequired',
+  'events.cancelAttendance', 'events.confirmDeleteCandidate',
+  'events.confirmDeleteExam', 'events.confirmDeleteEvent', 'events.confirmTitle', 'events.confirmAction', 'events.passVotes', 'events.openResultsFor', 'events.candidateCount', 'events.showCandidates', 'toast.resultsUnavailable', 'events.eventSaveRequired',
   'events.generateRandom', 'events.addTechniques', 'events.noExams', 'events.editEvent', 'events.openEvent', 'events.examLevel',
-  'events.selectedTechniques', 'events.readOnly', 'events.isArchived',
+  'events.selectedTechniques', 'events.readOnly', 'events.isArchived', 'events.end', 'events.exams', 'events.viewExam', 'events.viewTechnique', 'events.noTechniqueDetails', 'profile.countryNoResults',
+  'events.searchExaminer', 'events.noExaminerMatches', 'events.removeExaminer', 'events.examinerHasCandidates', 'events.cannotRemoveSelf',
 ];
-const languageSpecificEventKeys: MessageKey[] = ['events.involvedOnly', 'events.cancelAttendance', 'events.confirmTitle', 'events.passVotes', 'events.eventSaveRequired', 'events.examLevel', 'events.readOnly', 'events.isArchived'];
+const languageSpecificEventKeys: MessageKey[] = ['events.involvedOnly', 'events.cancelAttendance', 'events.confirmTitle', 'events.passVotes', 'events.openResultsFor', 'events.candidateCount', 'events.showCandidates', 'toast.resultsUnavailable', 'events.eventSaveRequired', 'events.examLevel', 'events.readOnly', 'events.isArchived', 'events.end', 'events.exams', 'events.viewExam', 'events.viewTechnique', 'events.noTechniqueDetails', 'profile.countryNoResults', 'events.searchExaminer', 'events.noExaminerMatches', 'events.removeExaminer', 'events.examinerHasCandidates', 'events.cannotRemoveSelf'];
 
 function readDataFile<T>(name: string): T {
   return JSON.parse(readFileSync(resolve(process.cwd(), 'data', name), 'utf8')) as T;
@@ -41,6 +42,14 @@ describe('localize', () => {
       for (const key of eventMessageKeys) expect(messages[language][key], `${key} / ${language}`).toBeTruthy();
       for (const key of languageSpecificEventKeys) expect(messages[language][key], `${key} / ${language}`).not.toBe(messages.en[key]);
     }
+  });
+
+  it('translates previously English labels in German and French', () => {
+    expect(messages.de['nav.lock']).toBe('Abmelden');
+    expect(messages.de['preparation.lock']).toBe('Abmelden');
+    expect(messages.de['tech.tabTags']).toBe('Schlagwörter');
+    expect(messages.fr['tech.tabTags']).toBe('Étiquettes');
+    expect(messages.fr['tech.tags']).toBe('Étiquettes');
   });
 
   it('includes translations for all exam data in English, French, Italian and Spanish', () => {

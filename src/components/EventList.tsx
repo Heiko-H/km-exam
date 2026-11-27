@@ -17,7 +17,7 @@ interface EventListProps {
   onOpen: (event: ExamEvent) => void;
 }
 
-type SortKey = 'date' | 'time' | 'location' | 'exams' | 'candidates' | 'examiners';
+type SortKey = 'date' | 'location' | 'candidates';
 
 export function EventList({ events, examiners, activeExaminerId, onNavigate, onLock, onCreate, onOpen }: EventListProps) {
   const { t, language } = useI18n();
@@ -39,11 +39,8 @@ export function EventList({ events, examiners, activeExaminerId, onNavigate, onL
     const getValue = (event: ExamEvent): string | number => {
       switch (sortKey) {
         case 'date': return event.date;
-        case 'time': return event.startTime;
         case 'location': return event.location || t('events.unnamed');
-        case 'exams': return event.exams.map((exam) => `${exam.name} ${exam.level}`).join(' ');
         case 'candidates': return event.candidates.length;
-        case 'examiners': return event.examinerIds.map((id) => examiners.find((item) => item.id === id)?.shortcode ?? '').join(' ');
       }
     };
     return filtered.sort((a, b) => {
@@ -54,13 +51,13 @@ export function EventList({ events, examiners, activeExaminerId, onNavigate, onL
     });
   }, [activeExaminerId, collator, events, examiners, involvedOnly, language, level, query, showArchived, sortDirection, sortKey, t]);
   const shortcode = examiners.find((item) => item.id === activeExaminerId)?.shortcode;
-  const columns: { key: SortKey; label: string }[] = [
+  const columns: { key?: SortKey; label: string }[] = [
     { key: 'date', label: t('events.date') },
-    { key: 'time', label: t('events.startTime') },
+    { label: t('events.startTime') },
     { key: 'location', label: t('events.location') },
-    { key: 'exams', label: t('events.exams') },
+    { label: t('events.exams') },
     { key: 'candidates', label: t('events.candidates') },
-    { key: 'examiners', label: t('events.examiners') },
+    { label: t('events.examiners') },
   ];
 
   function sortBy(key: SortKey) {
@@ -81,7 +78,7 @@ export function EventList({ events, examiners, activeExaminerId, onNavigate, onL
   return (
     <>
       <PageHeader activeRoute="exams" examinerShortcode={shortcode} onLock={onLock} onNavigate={onNavigate} title={t('events.title')} />
-      <main className="mx-auto max-w-5xl space-y-5 px-3 py-5 sm:px-6 sm:py-8">
+      <main className="app-container space-y-5 py-5 sm:py-8">
         <div className="flex flex-wrap items-center gap-3">
           <button className="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover" onClick={onCreate} type="button">{t('events.new')}</button>
           <label className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-600 px-3 text-sm text-slate-200">
@@ -106,7 +103,7 @@ export function EventList({ events, examiners, activeExaminerId, onNavigate, onL
         </div>
         {visibleEvents.length === 0 ? <p className="rounded-xl border border-slate-700 bg-panel p-6 text-slate-400">{t('events.empty')}</p> : <div className="overflow-x-auto rounded-xl border border-slate-700 bg-panel">
           <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-            <thead className="bg-app/70 text-xs uppercase tracking-wide text-slate-400"><tr>{columns.map((column) => <th aria-sort={sortKey === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'} className="border-b border-slate-700 px-4 py-3" key={column.key} scope="col"><button className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-white" onClick={() => sortBy(column.key)} title={t('events.sortBy', { label: column.label })} type="button">{column.label}{sortKey === column.key && <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}</button></th>)}</tr></thead>
+            <thead className="bg-app/70 text-xs uppercase tracking-wide text-slate-400"><tr>{columns.map((column) => <th aria-sort={column.key ? sortKey === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none' : undefined} className="border-b border-slate-700 px-4 py-3" key={column.key ?? column.label} scope="col">{column.key ? <button className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-white" onClick={() => sortBy(column.key!)} title={t('events.sortBy', { label: column.label })} type="button">{column.label}{sortKey === column.key && <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}</button> : column.label}</th>)}</tr></thead>
             <tbody className="divide-y divide-slate-700/80">
               {visibleEvents.map((event) => <tr className="cursor-pointer text-slate-200 outline-none transition-colors hover:bg-slate-800/70 focus:bg-slate-800/70" key={event.id} onClick={() => onOpen(event)} onKeyDown={(keyboardEvent) => openOnKeyboard(keyboardEvent, event)} role="link" tabIndex={0} title={t('events.openEvent')}>
                 <td className="whitespace-nowrap px-4 py-3 text-primary">{event.date ? formatDate(event.date, language) : '—'}</td>

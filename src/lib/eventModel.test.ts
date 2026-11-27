@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canEditEvent, candidatesForExam, isInvolved, passVotes, sortEvents } from './eventModel';
-import type { ExamDefinition, ExamEvent } from './types';
+import { canEditEvent, candidateExaminerIds, candidateOutcome, candidatesForExam, isInvolved, passVotes, sortEvents } from './eventModel';
+import type { Candidate, ExamDefinition, ExamEvent } from './types';
 
 function event(patch: Partial<ExamEvent> = {}): ExamEvent {
   return {
@@ -40,13 +40,53 @@ describe('exam event model', () => {
   it('offers only non-cancelled candidates registered for the exam level', () => {
     const item = event({
       candidates: [
-        { id: 'marc', name: 'Marc', email: '', levels: [3], examinerId: 'e1', cancelled: false },
-        { id: 'lisa', name: 'Lisa', email: '', levels: [3, 4], examinerId: 'e1', cancelled: false },
-        { id: 'tom', name: 'Tom', email: '', levels: [3], examinerId: 'e1', cancelled: true },
-        { id: 'eva', name: 'Eva', email: '', levels: [2], examinerId: 'e1', cancelled: false },
+        { id: 'marc', name: 'Marc', email: '', levels: [3], examinerIds: ['e1'], cancelled: false },
+        { id: 'lisa', name: 'Lisa', email: '', levels: [3, 4], examinerIds: ['e1'], cancelled: false },
+        { id: 'tom', name: 'Tom', email: '', levels: [3], examinerIds: ['e1'], cancelled: true },
+        { id: 'eva', name: 'Eva', email: '', levels: [2], examinerIds: ['e1'], cancelled: false },
       ],
     });
     expect(candidatesForExam(item, exam).map((candidate) => candidate.id)).toEqual(['marc', 'lisa']);
+  });
+
+  it('normalizes assigned examiners and supports legacy candidate data', () => {
+    expect(candidateExaminerIds({ examinerIds: ['e1', 'e2', 'e1'], examinerId: 'e3' })).toEqual(['e1', 'e2']);
+    expect(candidateExaminerIds({ examinerIds: undefined, examinerId: 'e3' })).toEqual(['e3']);
+    expect(candidateExaminerIds({ examinerIds: [], examinerId: 'e3' })).toEqual(['e3']);
+  });
+
+  it('shows the majority outcome across eligible exam votes', () => {
+    const candidate: Candidate = { id: 'marc', name: 'Marc', email: '', levels: [3], examinerIds: ['e1', 'e2', 'e3'], cancelled: false };
+    const item = event({
+      exams: [exam, { ...exam, id: 'second-level-3' }, { ...exam, id: 'level-2', level: 2 }],
+      results: {
+        x: { marc: {
+          e1: { tasks: {}, generalNote: '', passed: true },
+          e2: { tasks: {}, generalNote: '', passed: false },
+          e3: { tasks: {}, generalNote: '', passed: false },
+          unrelated: { tasks: {}, generalNote: '', passed: false },
+        } },
+        'second-level-3': { marc: {
+          e1: { tasks: {}, generalNote: '', passed: true },
+          e2: { tasks: {}, generalNote: '', passed: true },
+        } },
+        'level-2': { marc: { e1: { tasks: {}, generalNote: '', passed: false } } },
+      },
+    });
+    expect(candidateOutcome(item, candidate)).toBe('passed');
+  });
+
+  it('treats a tie as failed and leaves candidates without a vote undecided', () => {
+    const candidate: Candidate = { id: 'marc', name: 'Marc', email: '', levels: [3], examinerIds: ['e1', 'e2'], cancelled: false };
+    const item = event({
+      exams: [exam],
+      results: { x: { marc: {
+        e1: { tasks: {}, generalNote: '', passed: true },
+        e2: { tasks: {}, generalNote: '', passed: false },
+      } } },
+    });
+    expect(candidateOutcome(item, candidate)).toBe('failed');
+    expect(candidateOutcome(event({ exams: [exam] }), candidate)).toBeUndefined();
   });
 
   it('sorts by date ascending and then by location', () => {
